@@ -2147,14 +2147,6 @@ const Contact = () => {
               display: "block",
               marginBottom: 16,
             }}>Alix · Austria</span>
-            <a href="tel:+436704001680" style={{
-              fontFamily: FONT.body,
-              fontSize: 16,
-              fontWeight: 400,
-              color: C.text.primary,
-              display: "block",
-              marginBottom: 6,
-            }}>+43 670 400 1680</a>
             <a href="mailto:moncheuralix@gmail.com" style={{
               fontFamily: FONT.body,
               fontSize: 16,
@@ -2174,14 +2166,6 @@ const Contact = () => {
               display: "block",
               marginBottom: 16,
             }}>Marine · Belgium</span>
-            <a href="tel:+32496055914" style={{
-              fontFamily: FONT.body,
-              fontSize: 16,
-              fontWeight: 400,
-              color: C.text.primary,
-              display: "block",
-              marginBottom: 6,
-            }}>+32 496 05 59 14</a>
             <a href="mailto:marinedementen@gmail.com" style={{
               fontFamily: FONT.body,
               fontSize: 16,
