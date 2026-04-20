@@ -361,13 +361,17 @@ const GlobalStyles = () => {
         .form-grid { grid-template-columns: 1fr !important; }
         .grid-footer { gap: 32px !important; }
         h1 { font-size: clamp(18px, 5vw, 24px) !important; }
-        section[id], section.grid-philosophy { padding-top: 56px !important; padding-bottom: 56px !important; }
+        section[id] { padding-top: 56px !important; padding-bottom: 56px !important; }
+        section.grid-philosophy { padding-top: 112px !important; padding-bottom: 56px !important; }
+        .script-heading { padding-left: 10px !important; }
       }
 
       @media (max-width: 480px) {
         .port-grid { grid-template-columns: 1fr !important; }
-        section[id], section.grid-philosophy { padding-left: 24px !important; padding-right: 24px !important; padding-top: 40px !important; padding-bottom: 40px !important; }
+        section[id] { padding-left: 24px !important; padding-right: 24px !important; padding-top: 40px !important; padding-bottom: 40px !important; }
+        section.grid-philosophy { padding-left: 24px !important; padding-right: 24px !important; padding-top: 96px !important; padding-bottom: 40px !important; }
         footer { padding-left: 24px !important; padding-right: 24px !important; }
+        .script-heading { padding-left: 14px !important; }
       }
     `;
     document.head.appendChild(style);
@@ -1382,7 +1386,7 @@ const Philosophy = () => {
         transform: vis ? "none" : "translateY(20px)",
         transition: `all ${DUR.slower}ms ${EASE.enter}`,
       }}>
-        <span style={{
+        <span className="script-heading" style={{
           fontFamily: FONT.hand,
           fontSize: "clamp(58px, 11.7vw, 135px)",
           fontWeight: 400,
@@ -1489,7 +1493,7 @@ const Services = () => {
       margin: "0 auto",
     }}>
       <Section>
-        <span style={{
+        <span className="script-heading" style={{
           fontFamily: FONT.hand,
           fontSize: "clamp(58px, 11.7vw, 135px)",
           fontWeight: 400,
@@ -1709,7 +1713,7 @@ const Portfolio = () => {
           marginBottom: 64,
         }}>
           <div>
-            <span style={{
+            <span className="script-heading" style={{
               fontFamily: FONT.hand,
               fontSize: "clamp(58px, 11.7vw, 135px)",
               fontWeight: 400,
@@ -1872,7 +1876,7 @@ const About = () => (
       marginBottom: 96,
     }} delay={100}>
       <div>
-        <h3 style={{
+        <h3 className="script-heading" style={{
           fontFamily: FONT.hand,
           fontSize: "clamp(126px, 23.4vw, 324px)",
           fontWeight: 400,
@@ -1935,7 +1939,7 @@ const About = () => (
     }} delay={100}>
       <PeelImage src={IMG.artist2} alt="Marine de Menten" imgStyle={{ objectPosition: "-30px" }} />
       <div>
-        <h3 style={{
+        <h3 className="script-heading" style={{
           fontFamily: FONT.hand,
           fontSize: "clamp(126px, 23.4vw, 324px)",
           fontWeight: 400,
@@ -2109,7 +2113,7 @@ const Contact = () => {
       }}>
         {/* Left — Contact details */}
         <Section>
-          <span style={{
+          <span className="script-heading" style={{
             fontFamily: FONT.hand,
             fontSize: "clamp(58px, 11.7vw, 135px)",
             fontWeight: 400,
