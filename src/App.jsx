@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useLayoutEffect } from "react";
+import { useState, useEffect, useRef, useCallback, useLayoutEffect, createContext, useContext } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
@@ -61,8 +61,8 @@ const FONT = {
   headingFeatures: "'liga', 'kern', 'salt'",
 };
 
-// ─── BRAND PINK (from business-card script) ──────────────────────
-const HAND_PINK = "#C84969"; // petalPink[600] — matches the card ink
+// ─── BRAND RED (script + logo accent) ────────────────────────────
+const HAND_RED = "#DA2631"; // signature red — script eyebrows, logo, preloader
 
 const EASE = {
   default: "cubic-bezier(0.4, 0.0, 0.2, 1)",
@@ -76,27 +76,394 @@ const DUR = { instant: 100, fast: 200, normal: 350, slow: 500, slower: 700, thre
 
 // ─── CURATED IMAGERY ──────────────────────────────────────────────
 const IMG = {
-  // Hero — warm, moody bridal portrait with veil (editorial close-up)
-  hero: "/photos/hero-bride-portrait.jpg",
-  // Showcase — bride in lace gown looking down, veil, window light
-  showcase: "/photos/bride-veil-window.jpg",
+  // Hero — new client hero image
+  hero: "/photos/hero.jpg",
+  // Showcase — bridal portrait
+  showcase: "/photos/gallery-16.jpg",
   // Artist portraits — Alix and Marine
   artist1: "/photos/Alix.jpg",
   artist2: "/photos/Marine.jpg",
-  // Moment — brow detail, intimate artistry close-up
+  // Moment — "not to transform" close-up (replaces brow-detail)
   detail: "/photos/brow-detail.jpg",
-  // Portfolio — curated selection of their best work
-  port1: "/photos/bridal-lip-closeup.jpg",       // Lip brush, silk PJs, warm light
-  port2: "/photos/vintage-car-bride.jpg",         // Bride in vintage car, golden tones
-  port3: "/photos/brow-detail.jpg",               // Intimate brow close-up
-  port4: "/photos/estate-couple.jpg",             // Classic couple, lace dress, estate
-  port5: "/photos/dior-palettes.jpg",             // Luxury product flat lay
-  port6: "/photos/darlings-chair-session.jpg",    // Branded chair — instant credibility
-  port7: "/photos/editorial-glam.jpg",            // Bold smoky eye, editorial range
-  port8: "/photos/tiara-bride-reception.jpg",     // Joyful tiara bride at reception
-  morning: "/photos/bridal-lip-closeup.jpg",      // For the immersive moment
-  studio: "/photos/dior-palettes.jpg",            // Product beauty
-  philosophy: "/photos/lace-bride-portrait.jpg",  // Lace gown, elegant pose
+  // Portfolio — curated selection from new client gallery
+  port1: "/photos/gallery-01.jpg",
+  port2: "/photos/gallery-05.jpg",
+  port3: "/photos/gallery-09.jpg",
+  port4: "/photos/gallery-14.jpg",
+  port5: "/photos/gallery-19.jpg",
+  port6: "/photos/gallery-23.jpg",
+  port7: "/photos/gallery-28.jpg",
+  port8: "/photos/gallery-33.jpg",
+  morning: "/photos/gallery-03.jpg",
+  studio: "/photos/gallery-17.jpg",
+  philosophy: "/photos/gallery-35.jpg",
+};
+
+// ─── GALLERY — all new client images ──────────────────────────────
+const GALLERY_IMAGES = Array.from({ length: 38 }, (_, i) => ({
+  src: `/photos/gallery-${String(i + 1).padStart(2, "0")}.jpg`,
+}));
+
+// ─── i18n — bilingual copy dictionary (EN + FR) ──────────────────
+// All visible site copy is keyed here. Components consume via `useT()`.
+// Language toggle lives in nav + footer.
+const COPY = {
+  en: {
+    nav: { experience: "The Experience", portfolio: "Portfolio", about: "About", contact: "Contact" },
+    a11y: { menu: "Menu", close: "Close", language: "Language" },
+    hero: {
+      eyebrow: "Bridal & Editorial Makeup",
+      lineA: "You look",
+      lineB: "beautiful",
+      lineC: "darling",
+      sub: "Bespoke artistry, by appointment.",
+      cta: "Book a consultation",
+      scroll: "Scroll",
+    },
+    philosophy: {
+      eyebrow: "Philosophy",
+      heading: "A sanctuary of calm\nbefore the world rushes in.",
+      body: "Behind Darlings are Alix and Marine. Our philosophy is simple: we believe in the power of a quiet moment before the world rushes in. We bring a decade of combined expertise to your special day or event. Whether it is a bridal morning, a private makeup lesson, or an evening gala, our mission is to ensure you feel utterly indulged and entirely yourself.",
+    },
+    services: {
+      eyebrow: "Services",
+      heading: "An offering, considered.",
+      list: [
+        {
+          title: "Bridal & Wedding",
+          body: "A morning for you and your closest loved ones. Relinquish the details and trust our artistry. From the first consultation to the final touch-up, we craft a luminous bridal look that honours your natural grace, ensuring you and your beloved radiate confidence. From 3 to 10 guests, we will take extra care of you and your cherished ones.",
+        },
+        {
+          title: "Special Event Makeup",
+          body: "Bespoke artistry for your most important occasions. Whether it is a gala or an intimate celebration, we create a custom makeup look, specially adapted to your features and your style.",
+        },
+        {
+          title: "Workshops & Courses",
+          body: "Master the art of your own radiance. Whether you wish to perfect your daily routine or master a specific technique, our private masterclasses offer tailored, step-by-step guidance in an inviting and relaxed atmosphere.",
+        },
+      ],
+    },
+    moment: { quote: "Not to transform, but to reveal." },
+    portfolio: {
+      eyebrow: "Portfolio",
+      heading: "Recent Work",
+      pill: "Updated Weekly",
+      interlude: "We believe in discretion. Our work lives in the confidence of the women who wear it\u2009—\u2009not in before-and-after comparisons.",
+    },
+    testimonials: {
+      eyebrow: "Testimonials",
+      heading: "In their words.",
+    },
+    about: {
+      eyebrow: "About",
+      heading: "Alix & Marine",
+      intro: "Alix and Marine are certified professional makeup artists with over a decade of experience. Both graduated from the Make Up For Ever Academy, they continuously refine their craft, staying at the forefront of the latest techniques and products.",
+      alix: {
+        name: "Alix",
+        role: "Co-Founder & Makeup Artist",
+        body: "Alix approaches makeup with a refined and intuitive understanding of light and skin. With a soft, considered touch, she enhances natural beauty creating looks that feel luminous, and true to each individual. Her work is guided by a quiet elegance, offering a thoughtful experience where beauty feels both elevated and entirely personal.",
+        quote: "I believe that the finest artistry is the kind you cannot see, only feel. Every face tells a story, and my role is simply to illuminate it.",
+      },
+      marine: {
+        name: "Marine",
+        role: "Co-Founder & Makeup Artist",
+        body: "Marine works with softness and sensitivity, creating a calm and reassuring experience for every client. Her intention is simple: to enhance your natural beauty while helping you feel confident, radiant, and truly yourself — all while enjoying a unique and intimate moment.",
+        quote: "Makeup is not about changing who you are, but about softly revealing your light.",
+      },
+    },
+    cta: {
+      eyebrow: "Begin",
+      heading: "An appointment, an experience.",
+      body: "We work by appointment only — please share a few details and we will respond personally within 24 hours.",
+      button: "Get in touch",
+    },
+    contact: {
+      eyebrow: "Contact",
+      heading: "Get in touch",
+      body: "Tell us a little about your day. We will respond personally within 24 hours.",
+      labels: {
+        name: "Name",
+        email: "Email",
+        phone: "Phone (optional)",
+        date: "Date",
+        readyBy: "Ready by",
+        readyByHelp: "What time do you need to be ready?",
+        guests: "Number of guests",
+        location: "Location",
+        type: "Interest",
+        message: "Tell us about your day",
+        send: "Send enquiry",
+        sending: "Sending…",
+        sent: "Thank you — we will be in touch shortly.",
+      },
+      types: ["Bridal & Wedding", "Special Event Makeup", "Workshops & Courses", "Something else"],
+      availability: "Available worldwide",
+    },
+    footer: {
+      tagline: "Bespoke bridal and beauty artistry, by appointment, worldwide.",
+      services: "Services",
+      company: "Company",
+      contact: "Contact",
+      links: {
+        servicesList: ["Bridal & Wedding", "Private Appointments", "Workshops & Courses", "Editorial & Campaign"],
+        companyList: ["About Us", "Portfolio", "Testimonials", "Reviews", "Contact"],
+      },
+      rights: "All rights reserved.",
+      privacy: "Privacy Policy",
+      terms: "Terms",
+      follow: "Follow",
+    },
+    lang: { en: "English", fr: "Français" },
+  },
+  fr: {
+    nav: { experience: "L\u2019Expérience", portfolio: "Portfolio", about: "À propos", contact: "Contact" },
+    a11y: { menu: "Menu", close: "Fermer", language: "Langue" },
+    hero: {
+      eyebrow: "Maquillage de mariée & éditorial",
+      lineA: "Tu es",
+      lineB: "magnifique",
+      lineC: "ma chérie",
+      sub: "Un savoir-faire sur mesure, sur rendez-vous.",
+      cta: "Réserver une consultation",
+      scroll: "Défiler",
+    },
+    philosophy: {
+      eyebrow: "Philosophie",
+      heading: "Un sanctuaire de calme\navant que le monde ne s\u2019agite.",
+      body: "Derrière Darlings se trouvent Alix et Marine. Notre philosophie est simple : nous croyons au pouvoir d\u2019un moment de calme avant que le monde ne s\u2019emballe. Nous mettons à votre service plus de dix ans d\u2019expertise cumulée pour votre journée ou événement spécial. Qu\u2019il s\u2019agisse d\u2019une matinée de mariage, d\u2019un cours de maquillage ou d\u2019une soirée, notre mission est de faire en sorte que vous vous sentiez pleinement choyée et totalement vous-même.",
+    },
+    services: {
+      eyebrow: "Services",
+      heading: "Une offre, pensée.",
+      list: [
+        {
+          title: "Mariage",
+          body: "Un moment dédié à vous et à vos proches. Laissez-vous guider par notre expertise. De la première consultation jusqu\u2019aux dernières retouches, nous réalisons un maquillage de mariée lumineux, pensé pour sublimer votre grâce naturelle et vous offrir un éclat en toute confiance. De 3 à 10 invitées, nous accordons une attention soignée à chacune de vous.",
+        },
+        {
+          title: "Maquillage événementiel",
+          body: "Un maquillage sur mesure pour vos occasions les plus importantes. Qu\u2019il s\u2019agisse d\u2019une célébration intime ou d\u2019un événement spécial, nous réalisons un maquillage personnalisé, pensé pour sublimer vos traits et refléter pleinement votre style.",
+        },
+        {
+          title: "Ateliers & Cours",
+          body: "Maîtrisez l\u2019art de votre propre éclat. Que vous souhaitiez perfectionner votre routine quotidienne ou apprendre une technique spécifique, nos masterclasses privées offrent un accompagnement personnalisé, étape par étape, dans une atmosphère conviviale et détendue.",
+        },
+      ],
+    },
+    moment: { quote: "Non pas transformer, mais révéler." },
+    portfolio: {
+      eyebrow: "Portfolio",
+      heading: "Travaux récents",
+      pill: "Mis à jour chaque semaine",
+      interlude: "Nous croyons en la discrétion. Notre travail vit dans la confiance des femmes qui le portent\u2009—\u2009pas dans des comparaisons avant/après.",
+    },
+    testimonials: {
+      eyebrow: "Témoignages",
+      heading: "Dans leurs mots.",
+    },
+    about: {
+      eyebrow: "À propos",
+      heading: "Alix & Marine",
+      intro: "Alix et Marine sont des maquilleuses professionnelles certifiées avec plus de dix ans d\u2019expérience. Toutes deux diplômées de la Make Up For Ever Academy, elles perfectionnent continuellement leur savoir-faire et restent à la pointe des dernières techniques et des produits les plus innovants.",
+      alix: {
+        name: "Alix",
+        role: "Co-fondatrice & Maquilleuse",
+        body: "Alix aborde le maquillage avec une compréhension fine et intuitive de la lumière et de la peau. Avec une gestuelle douce et maîtrisée, elle sublime la beauté naturelle en créant des looks lumineux, fidèles à chaque personnalité. Son approche, guidée par une élégance discrète, offre une expérience attentive où la beauté se révèle à la fois subtilement magnifiée et profondément personnelle.",
+        quote: "Je crois que l\u2019art le plus fin est celui que l\u2019on ne voit pas, mais que l\u2019on ressent. Chaque visage raconte une histoire, et mon rôle est simplement de la révéler.",
+      },
+      marine: {
+        name: "Marine",
+        role: "Co-fondatrice & Maquilleuse",
+        body: "Marine travaille avec douceur et sensibilité, créant une expérience calme et rassurante pour chaque cliente. Son intention est simple : sublimer votre beauté naturelle tout en vous aidant à vous sentir confiante, rayonnante et pleinement vous-même — dans un moment unique et privilégié.",
+        quote: "Le maquillage ne consiste pas à changer qui vous êtes, mais à révéler votre lumière.",
+      },
+    },
+    cta: {
+      eyebrow: "Commencer",
+      heading: "Un rendez-vous, une expérience.",
+      body: "Nous travaillons exclusivement sur rendez-vous — partagez quelques détails et nous vous répondrons personnellement sous 24 heures.",
+      button: "Nous contacter",
+    },
+    contact: {
+      eyebrow: "Contact",
+      heading: "Nous contacter",
+      body: "Parlez-nous un peu de votre journée. Nous vous répondrons personnellement sous 24 heures.",
+      labels: {
+        name: "Nom",
+        email: "Email",
+        phone: "Téléphone (optionnel)",
+        date: "Date",
+        readyBy: "Heure à laquelle vous devez être prête",
+        readyByHelp: "À quelle heure devez-vous être prête ?",
+        guests: "Nombre d\u2019invitées",
+        location: "Lieu",
+        type: "Intérêt",
+        message: "Parlez-nous de votre journée",
+        send: "Envoyer",
+        sending: "Envoi en cours…",
+        sent: "Merci — nous reviendrons vers vous très vite.",
+      },
+      types: ["Mariage", "Maquillage événementiel", "Ateliers & Cours", "Autre"],
+      availability: "Disponible dans le monde entier",
+    },
+    footer: {
+      tagline: "Maquillage de mariée et de beauté sur mesure, sur rendez-vous, partout dans le monde.",
+      services: "Services",
+      company: "À propos",
+      contact: "Contact",
+      links: {
+        servicesList: ["Mariage", "Rendez-vous privés", "Ateliers & Cours", "Éditorial & Campagne"],
+        companyList: ["À propos", "Portfolio", "Témoignages", "Avis", "Contact"],
+      },
+      rights: "Tous droits réservés.",
+      privacy: "Politique de confidentialité",
+      terms: "Mentions légales",
+      follow: "Suivre",
+    },
+    lang: { en: "English", fr: "Français" },
+  },
+};
+
+const LangContext = createContext({ lang: "en", setLang: () => {} });
+
+const useT = () => {
+  const ctx = useContext(LangContext);
+  return { lang: ctx.lang, setLang: ctx.setLang, t: COPY[ctx.lang] };
+};
+
+const LangProvider = ({ children }) => {
+  const [lang, setLang] = useState(() => {
+    if (typeof window === "undefined") return "en";
+    return localStorage.getItem("darlings-lang") || "en";
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") localStorage.setItem("darlings-lang", lang);
+    if (typeof document !== "undefined") document.documentElement.lang = lang;
+  }, [lang]);
+  return (
+    <LangContext.Provider value={{ lang, setLang }}>
+      {children}
+    </LangContext.Provider>
+  );
+};
+
+// ─── LANGUAGE SWITCHER — small, elegant dropdown for nav + footer ─
+const LanguageSwitcher = ({ tone = "dark" }) => {
+  const { lang, setLang, t } = useT();
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const onDocClick = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, []);
+
+  const palette = tone === "footer"
+    ? { ink: HAND_RED, hover: HAND_RED, border: "rgba(0,0,0,0.18)", panel: "#FCD6E3", panelBorder: "rgba(0,0,0,0.12)", subtle: "rgba(0,0,0,0.08)" }
+    : tone === "light"
+    ? { ink: "#fff", hover: "#fff", border: "rgba(255,255,255,0.5)", panel: "rgba(0,0,0,0.55)", panelBorder: "rgba(255,255,255,0.18)", subtle: "rgba(255,255,255,0.12)" }
+    : { ink: C.text.primary, hover: HAND_RED, border: C.border.default, panel: C.alabaster[100], panelBorder: C.border.default, subtle: C.alabaster[300] };
+
+  const choose = (next) => { setLang(next); setOpen(false); };
+
+  return (
+    <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={t.a11y.language}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          padding: "6px 10px",
+          background: "transparent",
+          border: `1px solid ${palette.border}`,
+          borderRadius: 9999,
+          fontFamily: FONT.body,
+          fontSize: 11,
+          letterSpacing: "0.14em",
+          textTransform: "uppercase",
+          color: palette.ink,
+          cursor: "pointer",
+          transition: `color ${DUR.fast}ms ${EASE.default}, border-color ${DUR.fast}ms`,
+        }}
+      >
+        <span style={{ fontVariantNumeric: "tabular-nums" }}>{lang.toUpperCase()}</span>
+        <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden>
+          <path d={open ? "M1 5L4 2L7 5" : "M1 3L4 6L7 3"} stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+        </svg>
+      </button>
+      {open && (
+        <ul
+          role="listbox"
+          style={{
+            position: "absolute",
+            top: "calc(100% + 6px)",
+            right: 0,
+            margin: 0,
+            padding: 6,
+            listStyle: "none",
+            background: palette.panel,
+            border: `1px solid ${palette.panelBorder}`,
+            borderRadius: 8,
+            boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
+            minWidth: 140,
+            zIndex: 60,
+          }}
+        >
+          {[
+            { code: "en", label: "English" },
+            { code: "fr", label: "Français" },
+          ].map((opt) => (
+            <li key={opt.code}>
+              <button
+                type="button"
+                role="option"
+                aria-selected={lang === opt.code}
+                onClick={() => choose(opt.code)}
+                style={{
+                  width: "100%",
+                  textAlign: "left",
+                  background: lang === opt.code ? palette.subtle : "transparent",
+                  border: "none",
+                  padding: "8px 12px",
+                  borderRadius: 6,
+                  fontFamily: FONT.body,
+                  fontSize: 12,
+                  letterSpacing: "0.04em",
+                  color: lang === opt.code ? palette.hover : palette.ink,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                }}
+              >
+                <span>{opt.label}</span>
+                <span style={{
+                  fontFamily: FONT.body,
+                  fontSize: 10,
+                  letterSpacing: "0.16em",
+                  opacity: 0.6,
+                }}>{opt.code.toUpperCase()}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 };
 
 // ─── LOGO (sacred — from SVG source, brand red) ──────────────────
@@ -197,7 +564,6 @@ const GlobalStyles = () => {
       }
 
       body {
-        cursor: none;
         background: ${C.bg};
         color: ${C.text.primary};
         font-family: ${FONT.body};
@@ -212,14 +578,9 @@ const GlobalStyles = () => {
         color: ${C.editorialInk[800]};
       }
 
-      a { color: inherit; text-decoration: none; cursor: none; }
-      button { cursor: none; border: none; background: none; font-family: inherit; }
+      a { color: inherit; text-decoration: none; }
+      button { border: none; background: none; font-family: inherit; }
       img { display: block; max-width: 100%; }
-      *, *::before, *::after { cursor: none !important; }
-
-      @media (pointer: coarse) {
-        body, *, *::before, *::after { cursor: auto !important; }
-      }
       input, textarea, select { font-family: inherit; }
 
       /* The Breath — signature vignette on images with organic grain */
@@ -331,6 +692,17 @@ const GlobalStyles = () => {
       .port-grid:hover .port-item { opacity: 0.75; }
       .port-grid:hover .port-item:hover { opacity: 1; }
       .port-parallax { will-change: transform; }
+
+      /* Portfolio variants — carousel rail (hide scrollbar) + uniform gallery hover */
+      .carousel-rail { -ms-overflow-style: none; scrollbar-width: none; }
+      .carousel-rail::-webkit-scrollbar { display: none; }
+      .carousel-card img { transition: transform ${DUR.slow}ms ${EASE.default}; }
+      .carousel-card:hover img { transform: scale(1.02); }
+      .port-uniform-tile img { transition: transform ${DUR.slow}ms ${EASE.default}; }
+      .port-uniform-tile:hover img { transform: scale(1.025); }
+      @media (max-width: 720px) {
+        .port-gallery-grid { grid-template-columns: repeat(2, 1fr) !important; }
+      }
 
       /* Hero fade-in */
       @keyframes fadeIn {
@@ -558,8 +930,8 @@ const Preloader = ({ onComplete }) => {
   }, [glyphs, onComplete]);
 
   // Card palette, matched to the printed business card.
-  const GROUND = "#FCD6E3";            // card stock — pale pink
-  const SCRIPT_INK = C.petalPink[500]; // #DC6683 — the writing is the message
+  const GROUND = "#FCD6E3";  // card stock — pale pink
+  const SCRIPT_INK = HAND_RED; // signature red — matches site script eyebrows + logo
 
   return (
     <div ref={wrapRef} style={{
@@ -615,84 +987,6 @@ const Preloader = ({ onComplete }) => {
         )}
       </div>
     </div>
-  );
-};
-
-// ─── CUSTOM CURSOR — Tactile intimacy ─────────────────────────────
-const CustomCursor = () => {
-  const dotRef = useRef(null);
-  const textRef = useRef(null);
-  const pos = useRef({ x: 0, y: 0 });
-  const target = useRef({ x: 0, y: 0 });
-  const size = useRef(4);
-  const targetSize = useRef(4);
-  const cursorText = useRef("");
-  const isTouch = useRef(false);
-
-  useEffect(() => {
-    // Skip on touch devices
-    if (window.matchMedia("(pointer: coarse)").matches) {
-      isTouch.current = true;
-      return;
-    }
-
-    const onMove = (e) => { target.current = { x: e.clientX, y: e.clientY }; };
-    const onEnterBtn = () => { targetSize.current = 0; };
-    const onLeaveBtn = () => { targetSize.current = 4; };
-
-    window.addEventListener("mousemove", onMove, { passive: true });
-
-    // Observe DOM for data-cursor elements
-    const attachListeners = () => {
-      document.querySelectorAll('[data-cursor="magnetic"]').forEach((el) => {
-        el.removeEventListener("mouseenter", onEnterBtn);
-        el.removeEventListener("mouseleave", onLeaveBtn);
-        el.addEventListener("mouseenter", onEnterBtn);
-        el.addEventListener("mouseleave", onLeaveBtn);
-      });
-    };
-    // Re-attach after DOM settles
-    const timer = setTimeout(attachListeners, 2000);
-    const interval = setInterval(attachListeners, 4000);
-
-    let raf;
-    const lerp = (a, b, f) => a + (b - a) * f;
-    const loop = () => {
-      pos.current.x = lerp(pos.current.x, target.current.x, 0.15);
-      pos.current.y = lerp(pos.current.y, target.current.y, 0.15);
-      size.current = lerp(size.current, targetSize.current, 0.12);
-      const d = dotRef.current;
-      if (d) {
-        d.style.transform = `translate(${pos.current.x - size.current / 2}px, ${pos.current.y - size.current / 2}px)`;
-        d.style.width = `${size.current}px`;
-        d.style.height = `${size.current}px`;
-        d.style.opacity = size.current < 1 ? "0" : "1";
-      }
-      raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
-
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      cancelAnimationFrame(raf);
-      clearTimeout(timer);
-      clearInterval(interval);
-    };
-  }, []);
-
-  // Don't render on touch devices
-  if (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches) return null;
-
-  return (
-    <>
-      <div ref={dotRef} style={{
-        position: "fixed", top: 0, left: 0, zIndex: 10000,
-        width: 4, height: 4, borderRadius: "50%",
-        background: C.brand.default,
-        pointerEvents: "none",
-        transition: "opacity 0.3s",
-      }} />
-    </>
   );
 };
 
@@ -958,6 +1252,7 @@ const MagneticButton = ({ children, onClick, style = {}, ...props }) => {
 // NAVIGATION — Minimal, floating, smart-scroll hide/show
 // ═══════════════════════════════════════════════════════════════════
 const Navigation = ({ activeSection }) => {
+  const { t } = useT();
   const [pastHero, setPastHero] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const navRef = useRef(null);
@@ -993,10 +1288,10 @@ const Navigation = ({ activeSection }) => {
   }, []);
 
   const links = [
-    { id: "experience", label: "The Experience" },
-    { id: "portfolio", label: "Portfolio" },
-    { id: "about", label: "About" },
-    { id: "contact", label: "Contact" },
+    { id: "experience", label: t.nav.experience },
+    { id: "portfolio", label: t.nav.portfolio },
+    { id: "about", label: t.nav.about },
+    { id: "contact", label: t.nav.contact },
   ];
 
   const scrollTo = (id) => {
@@ -1074,7 +1369,7 @@ const Navigation = ({ activeSection }) => {
         }}
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
       >
-        <DarlingsLogoSmall width={120} color={HAND_PINK} />
+        <DarlingsLogoSmall width={120} color={HAND_RED} />
       </div>
 
       {/* Right links */}
@@ -1095,6 +1390,7 @@ const Navigation = ({ activeSection }) => {
             {l.label}
           </button>
         ))}
+        <LanguageSwitcher tone={pastHero ? "dark" : "light"} />
       </div>
 
       {/* Mobile menu button */}
@@ -1121,19 +1417,19 @@ const Navigation = ({ activeSection }) => {
       >
         <span style={{
           display: "block",
-          width: 22, height: 1.5, background: pastHero ? HAND_PINK : "#fff",
+          width: 22, height: 1.5, background: pastHero ? HAND_RED : "#fff",
           transform: menuOpen ? "rotate(45deg) translateY(4.5px)" : "none",
           transition: `transform ${DUR.normal}ms ${EASE.default}, background ${DUR.slow}ms ${EASE.default}`,
         }} />
         <span style={{
           display: "block",
-          width: 22, height: 1.5, background: pastHero ? HAND_PINK : "#fff",
+          width: 22, height: 1.5, background: pastHero ? HAND_RED : "#fff",
           opacity: menuOpen ? 0 : 1,
           transition: `opacity ${DUR.fast}ms, background ${DUR.slow}ms ${EASE.default}`,
         }} />
         <span style={{
           display: "block",
-          width: 22, height: 1.5, background: pastHero ? HAND_PINK : "#fff",
+          width: 22, height: 1.5, background: pastHero ? HAND_RED : "#fff",
           transform: menuOpen ? "rotate(-45deg) translateY(-4.5px)" : "none",
           transition: `transform ${DUR.normal}ms ${EASE.default}, background ${DUR.slow}ms ${EASE.default}`,
         }} />
@@ -1195,6 +1491,9 @@ const Navigation = ({ activeSection }) => {
               {l.label}
             </button>
           ))}
+          <div style={{ marginTop: 24 }}>
+            <LanguageSwitcher tone="dark" />
+          </div>
         </div>
       )}
     </nav>
@@ -1248,6 +1547,7 @@ const HeroTagline = ({ loaded }) => {
 // Like walking into that 7am room.
 // ═══════════════════════════════════════════════════════════════════
 const Hero = () => {
+  const { t } = useT();
   const [loaded, setLoaded] = useState(false);
   const [imgReady, setImgReady] = useState(false);
 
@@ -1282,7 +1582,7 @@ const Hero = () => {
           opacity: imgReady ? 1 : 0,
           transform: imgReady ? "scale(1)" : "scale(1.05)",
           transition: `opacity 1800ms ${EASE.enter}, transform 2400ms ${EASE.exit}`,
-          filter: "brightness(1.12) contrast(0.98) saturate(1.02)",
+          filter: "brightness(0.82) contrast(1.02) saturate(0.95)",
         }}
       />
 
@@ -1291,21 +1591,21 @@ const Hero = () => {
         position: "absolute",
         inset: 0,
         pointerEvents: "none",
-        opacity: 0.06,
+        opacity: 0.22,
         mixBlendMode: "multiply",
-        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-        backgroundSize: "128px 128px",
+        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+        backgroundSize: "150px 150px",
         zIndex: 1,
       }} />
 
-      {/* Soft light wash — lifts the image so the pink logo reads cleanly */}
+      {/* Dark gradient wash — ensures nav items read over bright hero */}
       <div style={{
         position: "absolute",
-        inset: 0,
-        background: `
-          radial-gradient(ellipse at center, rgba(255,248,240,0.28) 0%, rgba(255,248,240,0.08) 60%, transparent 100%),
-          linear-gradient(to bottom, rgba(255,248,240,0.1) 0%, transparent 40%, transparent 70%, rgba(42,37,33,0.08) 100%)
-        `,
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 140,
+        background: "linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0) 100%)",
         zIndex: 2,
         pointerEvents: "none",
       }} />
@@ -1322,7 +1622,7 @@ const Hero = () => {
         transition: `all 1200ms ${EASE.enter} 400ms`,
         marginBottom: 40,
       }}>
-        <DarlingsLogo width={340} color={HAND_PINK} />
+        <DarlingsLogo width={340} color={HAND_RED} />
       </div>
 
       {/* Minimal scroll indicator */}
@@ -1348,7 +1648,7 @@ const Hero = () => {
           color: "rgba(255,255,255,0.9)",
           textShadow: "0 1px 4px rgba(0,0,0,0.3)",
         }}>
-          Scroll
+          {t.hero.scroll}
         </span>
         <div style={{
           width: 1,
@@ -1364,6 +1664,7 @@ const Hero = () => {
 // PHILOSOPHY — Asymmetric break. Whitespace IS the statement.
 // ═══════════════════════════════════════════════════════════════════
 const Philosophy = () => {
+  const { t } = useT();
   const [ref, vis] = useReveal(0.15);
 
   return (
@@ -1391,11 +1692,11 @@ const Philosophy = () => {
           fontSize: "clamp(58px, 11.7vw, 135px)",
           fontWeight: 400,
           lineHeight: 1,
-          color: HAND_PINK,
+          color: HAND_RED,
           display: "block",
           marginBottom: 20,
         }}>
-          Philosophy
+          {t.philosophy.eyebrow}
         </span>
         <p style={{
           fontFamily: FONT.heading,
@@ -1406,21 +1707,9 @@ const Philosophy = () => {
           color: C.text.primary,
           maxWidth: "20ch",
           marginBottom: 48,
+          whiteSpace: "pre-line",
         }}>
-          A sanctuary of calm before the world rushes in.
-        </p>
-        <p style={{
-          fontFamily: FONT.body,
-          fontSize: 16,
-          fontWeight: 400,
-          lineHeight: 1.75,
-          color: C.text.secondary,
-          maxWidth: "48ch",
-          marginBottom: 24,
-        }}>
-          Behind Darlings are Alix and Marine. Our philosophy is simple: we believe in the power
-          of an intimate, quiet moment before the world rushes in. We bring a decade of
-          combined expertise to your day, but more importantly, we bring a sanctuary of calm.
+          {t.philosophy.heading}
         </p>
         <p style={{
           fontFamily: FONT.body,
@@ -1431,8 +1720,7 @@ const Philosophy = () => {
           maxWidth: "48ch",
           marginBottom: 32,
         }}>
-          Whether it is a bridal morning, a private lesson, or an evening gala, our mission
-          is to ensure you feel utterly indulged and entirely yourself.
+          {t.philosophy.body}
         </p>
         <span style={{
           fontFamily: FONT.body,
@@ -1460,7 +1748,7 @@ const Philosophy = () => {
           src={IMG.philosophy}
           alt="Bride in lace gown by window"
           aspect="3/4"
-          style={{ objectPosition: "top", filter: "brightness(0.95) saturate(0.92)" }}
+          imgStyle={{ objectPosition: "top", filter: "brightness(0.95) saturate(0.92)" }}
         />
       </div>
     </section>
@@ -1471,20 +1759,8 @@ const Philosophy = () => {
 // SERVICES — Three services. Not cards. Editorial text layout.
 // ═══════════════════════════════════════════════════════════════════
 const Services = () => {
-  const services = [
-    {
-      title: "Bridal & Wedding",
-      desc: "A morning of absolute calm. Relinquish the details and trust our artistry. From the first consultation to the final touch-up, we craft a luminous bridal look that honours your natural grace, ensuring you and your loved ones radiate confidence.",
-    },
-    {
-      title: "Private Appointments",
-      desc: "Bespoke artistry for your most important occasions. Whether it is a gala or an intimate celebration, we design a luminous, enduring look tailored entirely to your features and your style.",
-    },
-    {
-      title: "Workshops & Courses",
-      desc: "Master the art of your own radiance. Whether you wish to perfect your daily routine or master a specific technique, our private masterclasses offer tailored, step-by-step guidance in an inviting and relaxed atmosphere.",
-    },
-  ];
+  const { t } = useT();
+  const services = t.services.list.map((s) => ({ title: s.title, desc: s.body }));
 
   return (
     <section id="experience" style={{
@@ -1498,11 +1774,11 @@ const Services = () => {
           fontSize: "clamp(58px, 11.7vw, 135px)",
           fontWeight: 400,
           lineHeight: 1,
-          color: HAND_PINK,
+          color: HAND_RED,
           display: "block",
           marginBottom: 28,
         }}>
-          Services
+          {t.services.eyebrow}
         </span>
       </Section>
 
@@ -1547,7 +1823,9 @@ const Services = () => {
 // MOMENT — Full-width image with single line of text.
 // "A breath between sections."
 // ═══════════════════════════════════════════════════════════════════
-const Moment = () => (
+const Moment = () => {
+  const { t } = useT();
+  return (
   <Section style={{
     position: "relative",
     width: "100%",
@@ -1557,7 +1835,7 @@ const Moment = () => (
   }}>
     <div className="breath" style={{ position: "absolute", inset: 0 }}>
       <LazyImage
-        src={IMG.port3}
+        src={IMG.detail}
         alt="Morning light through studio"
         style={{ filter: "brightness(0.85) saturate(0.85)" }}
       />
@@ -1588,90 +1866,192 @@ const Moment = () => (
         color: C.text.inverse,
         textShadow: "none",
       }}>
-        Three hours of quiet mastery.
+        {t.moment.quote}
       </p>
     </div>
   </Section>
-);
+  );
+};
 
 // ═══════════════════════════════════════════════════════════════════
 // TESTIMONIAL — Single voice. Cormorant at large scale.
 // ═══════════════════════════════════════════════════════════════════
-const Testimonial = () => (
-  <Section style={{
-    padding: "80px 48px",
-    maxWidth: 900,
-    margin: "0 auto",
-    textAlign: "center",
-  }}>
-    <span style={{
-      fontFamily: FONT.script,
-      fontSize: 80,
-      fontWeight: 400,
-      lineHeight: 1,
-      color: C.petalPink[300],
-      display: "block",
-      marginBottom: 24,
+// Real client quotes — mixed FR/EN; we keep them in the language they were written.
+const TESTIMONIALS = [
+  { name: "Marie", lang: "fr", quote: "Je tenais à vous remercier pour vos doux mots, votre professionnalisme et votre réassurance le jour J. Je suis très heureuse d\u2019avoir fait appel à vos mains de fées et mes témoins aussi." },
+  { name: "Danielle", lang: "en", quote: "I received so many amazing feedback on my makeup for my wedding. It really fitted my style and it was very natural. Thank you again for your wonderful work. My skin wasn\u2019t dry, my face didn\u2019t tense\u2026 it was awesome!" },
+  { name: "Johanna", lang: "fr", quote: "Un tout grand merci de nous avoir maquillées ma Maman, ma marraine et moi pour mon mariage ! Quelle chance d\u2019avoir été entourées par des personnes aussi souriantes et compétentes ! Ce fut un réel plaisir pour nous et le résultat était juste parfait ! Mille mercis." },
+  { name: "Lucy", lang: "en", quote: "Thank you so much\u2009—\u2009we all loved the make up, and it stayed on very well the whole day. Thanks for being so calming and so flexible in the morning as things got so busy! It really helped to keep me calm in the moment and set the tone for the day." },
+  { name: "Charlotte", lang: "fr", quote: "Je te remercie du fond du cœur de m\u2019avoir maquillée samedi. J\u2019ai adoré ton magnifique maquillage, et j\u2019ai aussi énormément apprécié ta douceur qui m\u2019a beaucoup apaisée. Merci." },
+  { name: "Claire", lang: "en", quote: "You were a fantastic makeup artist and hair stylist\u2009—\u2009I was very pleased with the look I had for my wedding and it lasted throughout the night. I had so many compliments! On the day, you were a calming presence for me and worked efficiently. Thank you." },
+  { name: "Camille", lang: "fr", quote: "Je tenais à vous remercier du fond du cœur pour notre mise en beauté à mes témoins et moi-même le matin de mon mariage. Le maquillage était sublime et a résisté aux nombreuses larmes tout au long de la journée. MERCI pour tout." },
+  { name: "Caroline", lang: "en", quote: "Thank you for your kindness, your gentleness, your softness, and your professionalism! You played a big part in making this moment unforgettable. Thank you very much." },
+  { name: "Eléonore", lang: "fr", quote: "Bien que très stressée, votre présence le matin m\u2019a immédiatement apaisée grâce à votre énergie douce, pétillante et bienveillante. Je ne me suis jamais sentie aussi belle, et vous avez su nous sublimer tout en restant naturelles. Ce n\u2019était pas juste un maquillage mais une expérience et une rencontre unique. Merci infiniment." },
+];
+
+const Testimonial = () => {
+  const { t, lang } = useT();
+  const items = TESTIMONIALS.filter((t) => t.lang === lang);
+  const [i, setI] = useState(0);
+  // Reset index when language changes
+  useEffect(() => { setI(0); }, [lang]);
+  const cur = items[i] || items[0];
+  const prev = () => setI((p) => (p - 1 + items.length) % items.length);
+  const next = () => setI((p) => (p + 1) % items.length);
+
+  return (
+    <Section style={{
+      padding: "80px 48px",
+      maxWidth: 900,
+      margin: "0 auto",
+      textAlign: "center",
     }}>
-      {"\u201C"}
-    </span>
-    <blockquote style={{
-      fontFamily: FONT.heading,
-      fontSize: "clamp(22px, 3vw, 31px)",
-      fontWeight: 400,
-      lineHeight: 1.35,
-      letterSpacing: "-0.005em",
-      color: C.text.primary,
-      fontStyle: "normal",
-      marginBottom: 40,
-    }}>
-      She made me feel like the most important person in the world.
-      I looked in the mirror and saw myself{"\u2009"}&mdash;{"\u2009"}only somehow the version I always imagined.
-    </blockquote>
-    <div>
-      <cite style={{
-        fontFamily: FONT.body,
-        fontSize: 14,
-        fontWeight: 400,
-        fontStyle: "normal",
-        color: C.text.primary,
-        letterSpacing: "0.02em",
-      }}>
-        Charlotte M.
-      </cite>
       <span style={{
+        fontFamily: FONT.body,
+        fontSize: 11,
+        fontWeight: 500,
+        letterSpacing: "0.16em",
+        textTransform: "uppercase",
+        color: C.text.tertiary,
         display: "block",
+        marginBottom: 16,
+      }}>
+        {t.testimonials.eyebrow}
+      </span>
+      <span style={{
+        fontFamily: FONT.script,
+        fontSize: 80,
+        fontWeight: 400,
+        lineHeight: 1,
+        color: C.petalPink[300],
+        display: "block",
+        marginBottom: 16,
+      }}>
+        {"\u201C"}
+      </span>
+      <blockquote
+        key={i}
+        lang={cur.lang}
+        style={{
+          fontFamily: FONT.heading,
+          fontSize: "clamp(20px, 2.6vw, 27px)",
+          fontWeight: 400,
+          lineHeight: 1.45,
+          letterSpacing: "-0.005em",
+          color: C.text.primary,
+          fontStyle: "normal",
+          marginBottom: 32,
+          maxWidth: "44ch",
+          marginInline: "auto",
+          animation: `fadeIn ${DUR.normal}ms ${EASE.enter}`,
+        }}
+      >
+        {cur.quote}
+      </blockquote>
+      <cite style={{
         fontFamily: FONT.body,
         fontSize: 13,
         fontWeight: 400,
-        color: C.text.tertiary,
-        marginTop: 4,
+        fontStyle: "normal",
+        color: C.text.secondary,
+        letterSpacing: "0.08em",
+        textTransform: "uppercase",
+        display: "block",
+        marginBottom: 32,
       }}>
-        Bride, Summer 2025
-      </span>
-    </div>
-  </Section>
-);
+        — {cur.name}
+      </cite>
+
+      {/* Nav: arrows + dots */}
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 24,
+      }}>
+        <button
+          onClick={prev}
+          aria-label="Previous testimonial"
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 9999,
+            border: `1px solid ${C.border.default}`,
+            background: "transparent",
+            color: C.text.secondary,
+            cursor: "pointer",
+            display: "grid",
+            placeItems: "center",
+          }}
+        >
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+            <path d="M9 2L4 7L9 12" stroke="currentColor" strokeWidth="1.2" fill="none" />
+          </svg>
+        </button>
+        <div style={{ display: "flex", gap: 8 }}>
+          {items.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setI(idx)}
+              aria-label={`Go to testimonial ${idx + 1}`}
+              style={{
+                width: idx === i ? 18 : 6,
+                height: 6,
+                borderRadius: 9999,
+                background: idx === i ? HAND_RED : C.border.default,
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
+                transition: `all ${DUR.fast}ms ${EASE.default}`,
+              }}
+            />
+          ))}
+        </div>
+        <button
+          onClick={next}
+          aria-label="Next testimonial"
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 9999,
+            border: `1px solid ${C.border.default}`,
+            background: "transparent",
+            color: C.text.secondary,
+            cursor: "pointer",
+            display: "grid",
+            placeItems: "center",
+          }}
+        >
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+            <path d="M5 2L10 7L5 12" stroke="currentColor" strokeWidth="1.2" fill="none" />
+          </svg>
+        </button>
+      </div>
+    </Section>
+  );
+};
 
 // ═══════════════════════════════════════════════════════════════════
 // PORTFOLIO — Masonry with editorial rhythm.
 // Intentional grid breaks. The Breath on each image.
 // ═══════════════════════════════════════════════════════════════════
 const Portfolio = () => {
+  const { t } = useT();
   const [activeFilter, setActiveFilter] = useState("all");
   const [lightbox, setLightbox] = useState(null);
 
   const gridRef = useRef(null);
 
+  // Masonry uses a curated subset for editorial rhythm
   const images = [
-    { src: IMG.port1, cat: "bridal", aspect: "3/4", col: "2 / 6", row: "1", speed: -30 },
-    { src: IMG.port2, cat: "glamour", aspect: "4/5", col: "8 / 11", row: "1", speed: 20 },
-    { src: IMG.port3, cat: "editorial", aspect: "16/10", col: "3 / 10", row: "2", speed: -15 },
-    { src: IMG.port4, cat: "bridal", aspect: "3/4", col: "1 / 4", row: "3", speed: 25 },
-    { src: IMG.port5, cat: "glamour", aspect: "4/3", col: "5 / 8", row: "3", speed: -40 },
-    { src: IMG.port6, cat: "bridal", aspect: "3/4", col: "9 / 13", row: "3", speed: 15 },
-    { src: IMG.port7, cat: "editorial", aspect: "1/1", col: "2 / 5", row: "4", speed: -20 },
-    { src: IMG.port8, cat: "glamour", aspect: "4/5", col: "7 / 11", row: "4", speed: 30 },
+    { src: GALLERY_IMAGES[0].src, cat: "bridal", aspect: "3/4", col: "2 / 6", row: "1", speed: -30 },
+    { src: GALLERY_IMAGES[5].src, cat: "glamour", aspect: "4/5", col: "8 / 11", row: "1", speed: 20 },
+    { src: GALLERY_IMAGES[10].src, cat: "editorial", aspect: "16/10", col: "3 / 10", row: "2", speed: -15 },
+    { src: GALLERY_IMAGES[15].src, cat: "bridal", aspect: "3/4", col: "1 / 4", row: "3", speed: 25 },
+    { src: GALLERY_IMAGES[20].src, cat: "glamour", aspect: "4/3", col: "5 / 8", row: "3", speed: -40 },
+    { src: GALLERY_IMAGES[24].src, cat: "bridal", aspect: "3/4", col: "9 / 13", row: "3", speed: 15 },
+    { src: GALLERY_IMAGES[29].src, cat: "editorial", aspect: "1/1", col: "2 / 5", row: "4", speed: -20 },
+    { src: GALLERY_IMAGES[34].src, cat: "glamour", aspect: "4/5", col: "7 / 11", row: "4", speed: 30 },
   ];
 
   const filtered = activeFilter === "all" ? images : images.filter(img => img.cat === activeFilter);
@@ -1718,11 +2098,11 @@ const Portfolio = () => {
               fontSize: "clamp(58px, 11.7vw, 135px)",
               fontWeight: 400,
               lineHeight: 1,
-              color: HAND_PINK,
+              color: HAND_RED,
               display: "block",
               marginBottom: 16,
             }}>
-              Portfolio
+              {t.portfolio.eyebrow}
             </span>
             <h2 style={{
               fontFamily: FONT.heading,
@@ -1733,7 +2113,7 @@ const Portfolio = () => {
               letterSpacing: "-0.02em",
               color: C.text.primary,
             }}>
-              Recent Work
+              {t.portfolio.heading}
             </h2>
           </div>
           <span style={{
@@ -1747,7 +2127,7 @@ const Portfolio = () => {
             border: `1px solid ${C.border.default}`,
             borderRadius: 9999,
           }}>
-            Updated Weekly
+            {t.portfolio.pill}
           </span>
         </div>
       </Section>
@@ -1808,8 +2188,7 @@ const Portfolio = () => {
           color: C.text.secondary,
           letterSpacing: "-0.005em",
         }}>
-          We believe in discretion. Our work lives in the confidence of the women
-          who wear it{"\u2009"}&mdash;{"\u2009"}not in before-and-after comparisons.
+          {t.portfolio.interlude}
         </p>
       </Section>
 
@@ -1859,14 +2238,416 @@ const Portfolio = () => {
 };
 
 // ═══════════════════════════════════════════════════════════════════
+// PORTFOLIO — Variant 02: Cinematic Carousel
+// Horizontal scroll-snap rail. Tall, considered cards. Counter + arrows.
+// ═══════════════════════════════════════════════════════════════════
+const PortfolioCarousel = () => {
+  const { t } = useT();
+  const [lightbox, setLightbox] = useState(null);
+  const [index, setIndex] = useState(0);
+  const railRef = useRef(null);
+
+  const images = GALLERY_IMAGES;
+
+  const scrollByCard = (dir) => {
+    const rail = railRef.current;
+    if (!rail) return;
+    const card = rail.querySelector(".carousel-card");
+    if (!card) return;
+    const step = card.getBoundingClientRect().width + 24;
+    rail.scrollBy({ left: dir * step, behavior: "smooth" });
+  };
+
+  // Track scroll position to update counter
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail) return;
+    let raf;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const card = rail.querySelector(".carousel-card");
+        if (!card) return;
+        const step = card.getBoundingClientRect().width + 24;
+        const i = Math.round(rail.scrollLeft / step);
+        setIndex(Math.min(images.length - 1, Math.max(0, i)));
+      });
+    };
+    rail.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      rail.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, [images.length]);
+
+  const counter = `${String(index + 1).padStart(2, "0")} / ${String(images.length).padStart(2, "0")}`;
+
+  return (
+    <section style={{
+      padding: "80px 0 48px",
+      overflow: "hidden",
+    }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 48px" }}>
+        <Section>
+          <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-end",
+            marginBottom: 48,
+            gap: 32,
+          }}>
+            <div>
+              <span className="script-heading" style={{
+                fontFamily: FONT.hand,
+                fontSize: "clamp(58px, 11.7vw, 135px)",
+                fontWeight: 400,
+                lineHeight: 1,
+                color: HAND_RED,
+                display: "block",
+                marginBottom: 16,
+              }}>
+                {t.portfolio.eyebrow}
+              </span>
+              <h2 style={{
+                fontFamily: FONT.heading,
+                fontFeatureSettings: FONT.headingFeatures,
+                fontSize: "clamp(32px, 4.5vw, 49px)",
+                fontWeight: 400,
+                lineHeight: 1.1,
+                letterSpacing: "-0.02em",
+                color: C.text.primary,
+              }}>
+                {t.portfolio.heading}
+              </h2>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <span style={{
+                fontFamily: FONT.body,
+                fontSize: 12,
+                letterSpacing: "0.12em",
+                color: C.text.tertiary,
+                fontVariantNumeric: "tabular-nums",
+                minWidth: 56,
+                textAlign: "right",
+              }}>
+                {counter}
+              </span>
+              <button
+                onClick={() => scrollByCard(-1)}
+                aria-label="Previous"
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 9999,
+                  border: `1px solid ${C.border.default}`,
+                  background: "transparent",
+                  color: C.text.primary,
+                  cursor: "pointer",
+                  display: "grid",
+                  placeItems: "center",
+                  transition: `all ${DUR.fast}ms ${EASE.standard}`,
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M9 2L4 7L9 12" stroke="currentColor" strokeWidth="1.2" fill="none" />
+                </svg>
+              </button>
+              <button
+                onClick={() => scrollByCard(1)}
+                aria-label="Next"
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 9999,
+                  border: `1px solid ${C.border.default}`,
+                  background: "transparent",
+                  color: C.text.primary,
+                  cursor: "pointer",
+                  display: "grid",
+                  placeItems: "center",
+                  transition: `all ${DUR.fast}ms ${EASE.standard}`,
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M5 2L10 7L5 12" stroke="currentColor" strokeWidth="1.2" fill="none" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </Section>
+      </div>
+
+      {/* Rail — full bleed, padded inset matches gutter */}
+      <div
+        ref={railRef}
+        className="carousel-rail"
+        style={{
+          display: "flex",
+          gap: 24,
+          overflowX: "auto",
+          scrollSnapType: "x mandatory",
+          scrollPadding: "0 48px",
+          padding: "8px 48px 48px",
+          scrollbarWidth: "none",
+        }}
+      >
+        {images.map((img, i) => (
+          <div
+            key={`${img.src}-${i}`}
+            className="carousel-card"
+            data-cursor="gallery"
+            onClick={() => setLightbox(img.src)}
+            style={{
+              flex: "0 0 auto",
+              width: "min(440px, 78vw)",
+              scrollSnapAlign: "start",
+              cursor: "pointer",
+            }}
+          >
+            <div style={{
+              aspectRatio: "3/4",
+              overflow: "hidden",
+              position: "relative",
+            }}>
+              <LazyImage src={img.src} alt="Darlings portfolio work" />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {lightbox && (
+        <div
+          onClick={() => setLightbox(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 200,
+            background: `${C.editorialInk[900]}f0`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            padding: 48,
+            animation: `fadeIn ${DUR.normal}ms ${EASE.enter}`,
+          }}
+        >
+          <img src={lightbox} alt="Portfolio detail" style={{ maxWidth: "85vw", maxHeight: "85vh", objectFit: "contain" }} />
+        </div>
+      )}
+    </section>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// PORTFOLIO — Variant 03: Uniform Gallery
+// Calm 3-column grid. All images share aspect ratio. No parallax.
+// ═══════════════════════════════════════════════════════════════════
+const PortfolioGallery = () => {
+  const { t } = useT();
+  const [lightbox, setLightbox] = useState(null);
+  const [visibleCount, setVisibleCount] = useState(12);
+
+  const images = GALLERY_IMAGES;
+  const visible = images.slice(0, visibleCount);
+  const hasMore = visibleCount < images.length;
+
+  return (
+    <section style={{
+      padding: "80px 48px 160px",
+      maxWidth: 1280,
+      margin: "0 auto",
+    }}>
+      <Section>
+        <div style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-end",
+          marginBottom: 64,
+        }}>
+          <div>
+            <span className="script-heading" style={{
+              fontFamily: FONT.hand,
+              fontSize: "clamp(58px, 11.7vw, 135px)",
+              fontWeight: 400,
+              lineHeight: 1,
+              color: HAND_RED,
+              display: "block",
+              marginBottom: 16,
+            }}>
+              {t.portfolio.eyebrow}
+            </span>
+            <h2 style={{
+              fontFamily: FONT.heading,
+              fontFeatureSettings: FONT.headingFeatures,
+              fontSize: "clamp(32px, 4.5vw, 49px)",
+              fontWeight: 400,
+              lineHeight: 1.1,
+              letterSpacing: "-0.02em",
+              color: C.text.primary,
+            }}>
+              {t.portfolio.heading}
+            </h2>
+          </div>
+          <span style={{
+            fontFamily: FONT.body,
+            fontSize: 12,
+            fontWeight: 400,
+            letterSpacing: "0.05em",
+            textTransform: "uppercase",
+            color: C.text.tertiary,
+            padding: "8px 20px",
+            border: `1px solid ${C.border.default}`,
+            borderRadius: 9999,
+          }}>
+            {t.portfolio.pill}
+          </span>
+        </div>
+      </Section>
+
+      <div className="port-gallery-grid" style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(3, 1fr)",
+        gap: 20,
+        rowGap: 20,
+      }}>
+        {visible.map((img, i) => (
+          <Section key={`${img.src}-${i}`} delay={i < 12 ? i * 60 : (i - visibleCount + 12) * 60}>
+            <figure
+              data-cursor="gallery"
+              className="port-uniform-tile"
+              onClick={() => setLightbox(img.src)}
+              style={{
+                position: "relative",
+                overflow: "hidden",
+                cursor: "pointer",
+                margin: 0,
+              }}
+            >
+              <div style={{ aspectRatio: "4/5", overflow: "hidden" }}>
+                <LazyImage src={img.src} alt="Darlings portfolio work" />
+              </div>
+            </figure>
+          </Section>
+        ))}
+      </div>
+
+      {hasMore && (
+        <div style={{ textAlign: "center", marginTop: 64 }}>
+          <button
+            onClick={() => setVisibleCount((c) => Math.min(c + 12, images.length))}
+            style={{
+              fontFamily: FONT.body,
+              fontSize: 13,
+              fontWeight: 400,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: C.text.secondary,
+              background: "transparent",
+              border: `1px solid ${C.border.default}`,
+              borderRadius: 9999,
+              padding: "14px 40px",
+              cursor: "pointer",
+              transition: `all ${DUR.normal}ms ${EASE.default}`,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = C.brand.default;
+              e.currentTarget.style.color = C.brand.default;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = C.border.default;
+              e.currentTarget.style.color = C.text.secondary;
+            }}
+          >
+            View more · {images.length - visibleCount} remaining
+          </button>
+        </div>
+      )}
+
+      {lightbox && (
+        <div
+          onClick={() => setLightbox(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 200,
+            background: `${C.editorialInk[900]}f0`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            padding: 48,
+            animation: `fadeIn ${DUR.normal}ms ${EASE.enter}`,
+          }}
+        >
+          <img src={lightbox} alt="Portfolio detail" style={{ maxWidth: "85vw", maxHeight: "85vh", objectFit: "contain" }} />
+        </div>
+      )}
+    </section>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// VariantLabel — discreet client-review marker shown above each
+// stacked Portfolio variant. Hidden in production via prop.
+// ═══════════════════════════════════════════════════════════════════
+const VariantLabel = ({ n, total = 3, name }) => (
+  <div style={{
+    maxWidth: 1280,
+    margin: "0 auto",
+    padding: "32px 48px 0",
+  }}>
+    <div style={{
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 12,
+      padding: "8px 16px",
+      border: `1px dashed ${C.border.subtle}`,
+      borderRadius: 4,
+      fontFamily: FONT.body,
+      fontSize: 11,
+      letterSpacing: "0.16em",
+      textTransform: "uppercase",
+      color: C.text.tertiary,
+    }}>
+      <span style={{ fontVariantNumeric: "tabular-nums" }}>
+        Option {String(n).padStart(2, "0")} / {String(total).padStart(2, "0")}
+      </span>
+      <span style={{
+        width: 1,
+        height: 12,
+        background: C.border.default,
+      }} />
+      <span>{name}</span>
+    </div>
+  </div>
+);
+
+// ═══════════════════════════════════════════════════════════════════
 // ABOUT — Asymmetric duo layout. Not a grid of equal cards.
 // ═══════════════════════════════════════════════════════════════════
-const About = () => (
+const About = () => {
+  const { t } = useT();
+  return (
   <section id="about" style={{
     padding: "80px 48px",
     maxWidth: 1280,
     margin: "0 auto",
   }}>
+    {/* Intro — applies to both artists */}
+    <Section style={{ maxWidth: 640, marginBottom: 140, marginLeft: "auto", marginRight: "auto", textAlign: "center" }}>
+      <p style={{
+        fontFamily: FONT.heading,
+        fontSize: 20,
+        fontWeight: 400,
+        fontStyle: "italic",
+        lineHeight: 1.65,
+        letterSpacing: "-0.005em",
+        color: C.text.secondary,
+      }}>
+        {t.about.intro}
+      </p>
+    </Section>
+
     {/* Artist 1 — text left, image right */}
     <Section className="grid-about" style={{
       display: "grid",
@@ -1881,13 +2662,13 @@ const About = () => (
           fontSize: "clamp(126px, 23.4vw, 324px)",
           fontWeight: 400,
           lineHeight: 0.9,
-          color: HAND_PINK,
+          color: HAND_RED,
           margin: 0,
           marginBottom: 32,
           whiteSpace: "nowrap",
           pointerEvents: "none",
         }}>
-          Alix
+          {t.about.alix.name}
         </h3>
         <span style={{
           fontFamily: FONT.body,
@@ -1899,7 +2680,7 @@ const About = () => (
           display: "block",
           marginBottom: 32,
         }}>
-          Moncheur · Co-Founder & Makeup Artist
+          {t.about.alix.role}
         </span>
         <p style={{
           fontFamily: FONT.body,
@@ -1910,9 +2691,7 @@ const About = () => (
           maxWidth: "48ch",
           marginBottom: 24,
         }}>
-          Certified Pro Makeup Artist with a background steeped in technical precision. Graduating from
-          the Make Up For Ever Academy, Alix approaches makeup with an almost architectural understanding
-          of light and skin. Her work is defined by an effortless, enduring elegance.
+          {t.about.alix.body}
         </p>
         <p style={{
           fontFamily: FONT.heading,
@@ -1923,11 +2702,10 @@ const About = () => (
           color: C.text.primary,
           maxWidth: "42ch",
         }}>
-          {"\u201C"}I believe that the finest artistry is the kind you cannot see{"\u2009"}&mdash;{"\u2009"}only
-          feel. Every face tells a story, and my role is simply to illuminate it.{"\u201D"}
+          {"\u201C"}{t.about.alix.quote}{"\u201D"}
         </p>
       </div>
-      <PeelImage src={IMG.artist1} alt="Alix Moncheur" />
+      <PeelImage src={IMG.artist1} alt="Alix" />
     </Section>
 
     {/* Artist 2 — image left, text right (reversed) */}
@@ -1937,20 +2715,20 @@ const About = () => (
       gap: 96,
       alignItems: "start",
     }} delay={100}>
-      <PeelImage src={IMG.artist2} alt="Marine de Menten" imgStyle={{ objectPosition: "-30px" }} />
+      <PeelImage src={IMG.artist2} alt="Marine" imgStyle={{ objectPosition: "-30px" }} />
       <div>
         <h3 className="script-heading" style={{
           fontFamily: FONT.hand,
           fontSize: "clamp(126px, 23.4vw, 324px)",
           fontWeight: 400,
           lineHeight: 0.9,
-          color: HAND_PINK,
+          color: HAND_RED,
           margin: 0,
           marginBottom: 32,
           whiteSpace: "nowrap",
           pointerEvents: "none",
         }}>
-          Marine
+          {t.about.marine.name}
         </h3>
         <span style={{
           fontFamily: FONT.body,
@@ -1962,7 +2740,7 @@ const About = () => (
           display: "block",
           marginBottom: 32,
         }}>
-          de Menten · Co-Founder & Makeup Artist
+          {t.about.marine.role}
         </span>
         <p style={{
           fontFamily: FONT.body,
@@ -1973,9 +2751,7 @@ const About = () => (
           maxWidth: "48ch",
           marginBottom: 24,
         }}>
-          Graduating alongside Alix at the Make Up For Ever Academy, Marine possesses an intuitive
-          understanding of colour as an emotional language. She believes that the right makeup is not
-          a mask, but a deeply personal expression of confidence.
+          {t.about.marine.body}
         </p>
         <p style={{
           fontFamily: FONT.heading,
@@ -1986,18 +2762,20 @@ const About = () => (
           color: C.text.primary,
           maxWidth: "42ch",
         }}>
-          {"\u201C"}Colour is confidence you can wear. I live for the moment a client sees herself
-          in the mirror and stands a little taller.{"\u201D"}
+          {"\u201C"}{t.about.marine.quote}{"\u201D"}
         </p>
       </div>
     </Section>
   </section>
-);
+  );
+};
 
 // ═══════════════════════════════════════════════════════════════════
 // CTA — Simple invitation. Not transactional.
 // ═══════════════════════════════════════════════════════════════════
-const CallToAction = () => (
+const CallToAction = () => {
+  const { t } = useT();
+  return (
   <Section style={{
     padding: "64px 48px",
     textAlign: "center",
@@ -2013,7 +2791,7 @@ const CallToAction = () => (
       color: C.text.primary,
       marginBottom: 24,
     }}>
-      Every great look begins with a conversation
+      {t.cta.heading}
     </h2>
     <p style={{
       fontFamily: FONT.body,
@@ -2023,9 +2801,7 @@ const CallToAction = () => (
       color: C.text.secondary,
       marginBottom: 48,
     }}>
-      We would love to hear about the event you are planning. Please share your date,
-      preparation location, and the number of guests requiring our services, and we will
-      curate a bespoke proposal just for you.
+      {t.cta.body}
     </p>
     <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
       <button
@@ -2045,7 +2821,7 @@ const CallToAction = () => (
         onMouseEnter={(e) => { e.currentTarget.style.background = C.editorialInk[700]; }}
         onMouseLeave={(e) => { e.currentTarget.style.background = C.editorialInk[800]; }}
       >
-        Begin Your Experience
+        {t.cta.button}
       </button>
       <button
         onClick={() => document.getElementById("portfolio")?.scrollIntoView({ behavior: "smooth" })}
@@ -2064,21 +2840,22 @@ const CallToAction = () => (
         onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.editorialInk[800]; }}
         onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border.strong; }}
       >
-        View Portfolio
+        {t.nav.portfolio}
       </button>
     </div>
   </Section>
-);
+  );
+};
 
 // ═══════════════════════════════════════════════════════════════════
 // CONTACT — Intimate. Not a form you fill in, a conversation you start.
 // ═══════════════════════════════════════════════════════════════════
 const Contact = () => {
+  const { t } = useT();
   const [formData, setFormData] = useState({
     name: "", email: "", phone: "", service: "",
-    weddingDate: "", venue: "", partySize: "", travelRequired: "",
+    weddingDate: "", readyBy: "", venue: "", partySize: "", travelRequired: "",
     appointmentDate: "", location: "", occasion: "",
-    projectType: "", brand: "", timeline: "",
     groupSize: "", experience: "",
     message: "",
   });
@@ -2118,11 +2895,11 @@ const Contact = () => {
             fontSize: "clamp(58px, 11.7vw, 135px)",
             fontWeight: 400,
             lineHeight: 1,
-            color: HAND_PINK,
+            color: HAND_RED,
             display: "block",
             marginBottom: 16,
           }}>
-            Get in Touch
+            {t.contact.heading}
           </span>
           <h2 style={{
             fontFamily: FONT.heading,
@@ -2133,7 +2910,7 @@ const Contact = () => {
             color: C.text.primary,
             marginBottom: 48,
           }}>
-            Every great look begins with a conversation
+            {t.cta.heading}
           </h2>
 
           <div style={{ marginBottom: 32 }}>
@@ -2184,7 +2961,7 @@ const Contact = () => {
               color: C.text.tertiary,
               display: "block",
               marginBottom: 8,
-            }}>Availability</span>
+            }}>{t.contact.labels.availability || "Availability"}</span>
             <p style={{
               fontFamily: FONT.body,
               fontSize: 16,
@@ -2192,8 +2969,7 @@ const Contact = () => {
               color: C.text.primary,
               lineHeight: 1.65,
             }}>
-              Austria & Belgium<br />
-              By appointment only
+              {t.contact.availability}
             </p>
           </div>
 
@@ -2207,7 +2983,7 @@ const Contact = () => {
               color: C.text.tertiary,
               display: "block",
               marginBottom: 8,
-            }}>Follow</span>
+            }}>{t.footer.follow}</span>
             <div style={{ display: "flex", gap: 20 }}>
               <a href="https://instagram.com/darlingsmakeupbe" target="_blank" rel="noopener noreferrer" style={{
                 fontFamily: FONT.body,
@@ -2233,22 +3009,22 @@ const Contact = () => {
               <p style={{
                 fontFamily: FONT.heading, fontSize: 28, fontWeight: 400,
                 color: C.text.primary, marginBottom: 16,
-              }}>Thank you</p>
+              }}>{t.contact.labels.sent.split(" — ")[0]}</p>
               <p style={{
                 fontFamily: FONT.body, fontSize: 16, fontWeight: 400,
                 color: C.text.secondary,
-              }}>We will be in touch within 24 hours.</p>
+              }}>{t.contact.labels.sent.split(" — ")[1] || t.contact.labels.sent}</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
               {/* Name + Email */}
               <div className="form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 24 }}>
                 <div>
-                  <label style={labelStyle}>Name *</label>
-                  <input className="form-input" type="text" placeholder="Your name" value={formData.name} onChange={set("name")} required />
+                  <label style={labelStyle}>{t.contact.labels.name} *</label>
+                  <input className="form-input" type="text" placeholder={t.contact.labels.name} value={formData.name} onChange={set("name")} required />
                 </div>
                 <div>
-                  <label style={labelStyle}>Email *</label>
+                  <label style={labelStyle}>{t.contact.labels.email} *</label>
                   <input className="form-input" type="email" placeholder="your@email.com" value={formData.email} onChange={set("email")} required />
                 </div>
               </div>
@@ -2256,18 +3032,17 @@ const Contact = () => {
               {/* Phone + Service */}
               <div className="form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 24 }}>
                 <div>
-                  <label style={labelStyle}>Phone</label>
+                  <label style={labelStyle}>{t.contact.labels.phone}</label>
                   <input className="form-input" type="tel" placeholder="+32 ..." value={formData.phone} onChange={set("phone")} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Service *</label>
+                  <label style={labelStyle}>{t.contact.labels.type} *</label>
                   <select className="form-input" value={formData.service} onChange={set("service")} required style={{ appearance: "none", cursor: "pointer" }}>
-                    <option value="">Select a service...</option>
-                    <option value="bridal">Bridal & Wedding</option>
-                    <option value="private">Private Appointment</option>
-                    <option value="editorial">Editorial & Campaign</option>
-                    <option value="workshop">Workshop or Course</option>
-                    <option value="other">Something else</option>
+                    <option value="">{t.contact.labels.type}…</option>
+                    <option value="bridal">{t.contact.types[0]}</option>
+                    <option value="private">{t.contact.types[1]}</option>
+                    <option value="workshop">{t.contact.types[2]}</option>
+                    <option value="other">{t.contact.types[3]}</option>
                   </select>
                 </div>
               </div>
@@ -2275,93 +3050,49 @@ const Contact = () => {
               {/* ─── Bridal conditional fields ─── */}
               {formData.service === "bridal" && (
                 <div style={{ padding: 24, background: "rgba(0,0,0,0.02)", borderRadius: 6, marginBottom: 24, border: `1px solid ${C.border.subtle}` }}>
-                  <span style={{ ...labelStyle, marginBottom: 20, fontSize: 10, color: C.brand.default }}>Wedding Details</span>
+                  <span style={{ ...labelStyle, marginBottom: 20, fontSize: 10, color: C.brand.default }}>{t.contact.types[0]}</span>
                   <div className="form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 24 }}>
                     <div>
-                      <label style={labelStyle}>Wedding Date</label>
+                      <label style={labelStyle}>{t.contact.labels.date}</label>
                       <input className="form-input" type="date" value={formData.weddingDate} onChange={set("weddingDate")} />
                     </div>
                     <div>
-                      <label style={labelStyle}>Venue / Location</label>
-                      <input className="form-input" type="text" placeholder="e.g. Château de Vaux" value={formData.venue} onChange={set("venue")} />
+                      <label style={labelStyle}>{t.contact.labels.readyBy}</label>
+                      <input className="form-input" type="time" value={formData.readyBy} onChange={set("readyBy")} placeholder={t.contact.labels.readyByHelp} />
                     </div>
                   </div>
-                  <div className="form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+                  <div className="form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 24 }}>
                     <div>
-                      <label style={labelStyle}>Bridal Party Size</label>
-                      <select className="form-input" value={formData.partySize} onChange={set("partySize")} style={{ appearance: "none", cursor: "pointer" }}>
-                        <option value="">Select...</option>
-                        <option value="bride-only">Bride only</option>
-                        <option value="1-3">Bride + 1–3</option>
-                        <option value="4-6">Bride + 4–6</option>
-                        <option value="7+">Bride + 7+</option>
-                      </select>
+                      <label style={labelStyle}>{t.contact.labels.location}</label>
+                      <input className="form-input" type="text" placeholder="e.g. Château de Vaux" value={formData.venue} onChange={set("venue")} />
                     </div>
                     <div>
-                      <label style={labelStyle}>Travel Required?</label>
-                      <select className="form-input" value={formData.travelRequired} onChange={set("travelRequired")} style={{ appearance: "none", cursor: "pointer" }}>
-                        <option value="">Select...</option>
-                        <option value="austria">Within Austria</option>
-                        <option value="belgium">Within Belgium</option>
-                        <option value="europe">Elsewhere in Europe</option>
-                        <option value="international">International</option>
+                      <label style={labelStyle}>{t.contact.labels.guests}</label>
+                      <select className="form-input" value={formData.partySize} onChange={set("partySize")} style={{ appearance: "none", cursor: "pointer" }}>
+                        <option value="">—</option>
+                        <option value="bride-only">1</option>
+                        <option value="1-3">2–4</option>
+                        <option value="4-6">5–7</option>
+                        <option value="7+">8–10</option>
                       </select>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* ─── Private conditional fields ─── */}
+              {/* ─── Special Event conditional fields ─── */}
               {formData.service === "private" && (
                 <div style={{ padding: 24, background: "rgba(0,0,0,0.02)", borderRadius: 6, marginBottom: 24, border: `1px solid ${C.border.subtle}` }}>
-                  <span style={{ ...labelStyle, marginBottom: 20, fontSize: 10, color: C.brand.default }}>Appointment Details</span>
+                  <span style={{ ...labelStyle, marginBottom: 20, fontSize: 10, color: C.brand.default }}>{t.contact.types[1]}</span>
                   <div className="form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 24 }}>
                     <div>
-                      <label style={labelStyle}>Preferred Date</label>
+                      <label style={labelStyle}>{t.contact.labels.date}</label>
                       <input className="form-input" type="date" value={formData.appointmentDate} onChange={set("appointmentDate")} />
                     </div>
                     <div>
-                      <label style={labelStyle}>Location</label>
-                      <select className="form-input" value={formData.location} onChange={set("location")} style={{ appearance: "none", cursor: "pointer" }}>
-                        <option value="">Select...</option>
-                        <option value="your-home">At your home</option>
-                        <option value="hotel">Hotel</option>
-                        <option value="event-venue">Event venue</option>
-                        <option value="other">Other</option>
-                      </select>
+                      <label style={labelStyle}>{t.contact.labels.location}</label>
+                      <input className="form-input" type="text" placeholder="—" value={formData.location} onChange={set("location")} />
                     </div>
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Occasion</label>
-                    <input className="form-input" type="text" placeholder="e.g. Birthday, gala, photoshoot..." value={formData.occasion} onChange={set("occasion")} />
-                  </div>
-                </div>
-              )}
-
-              {/* ─── Editorial conditional fields ─── */}
-              {formData.service === "editorial" && (
-                <div style={{ padding: 24, background: "rgba(0,0,0,0.02)", borderRadius: 6, marginBottom: 24, border: `1px solid ${C.border.subtle}` }}>
-                  <span style={{ ...labelStyle, marginBottom: 20, fontSize: 10, color: C.brand.default }}>Project Details</span>
-                  <div className="form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 24 }}>
-                    <div>
-                      <label style={labelStyle}>Project Type</label>
-                      <select className="form-input" value={formData.projectType} onChange={set("projectType")} style={{ appearance: "none", cursor: "pointer" }}>
-                        <option value="">Select...</option>
-                        <option value="fashion-editorial">Fashion editorial</option>
-                        <option value="brand-campaign">Brand campaign</option>
-                        <option value="film-tv">Film / TV</option>
-                        <option value="lookbook">Lookbook</option>
-                        <option value="other">Other</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label style={labelStyle}>Brand / Publication</label>
-                      <input className="form-input" type="text" placeholder="e.g. Vogue, Dior..." value={formData.brand} onChange={set("brand")} />
-                    </div>
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Timeline</label>
-                    <input className="form-input" type="text" placeholder="e.g. June 2026, flexible..." value={formData.timeline} onChange={set("timeline")} />
                   </div>
                 </div>
               )}
@@ -2369,50 +3100,33 @@ const Contact = () => {
               {/* ─── Workshop conditional fields ─── */}
               {formData.service === "workshop" && (
                 <div style={{ padding: 24, background: "rgba(0,0,0,0.02)", borderRadius: 6, marginBottom: 24, border: `1px solid ${C.border.subtle}` }}>
-                  <span style={{ ...labelStyle, marginBottom: 20, fontSize: 10, color: C.brand.default }}>Workshop Details</span>
+                  <span style={{ ...labelStyle, marginBottom: 20, fontSize: 10, color: C.brand.default }}>{t.contact.types[2]}</span>
                   <div className="form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
                     <div>
-                      <label style={labelStyle}>Group Size</label>
+                      <label style={labelStyle}>{t.contact.labels.guests}</label>
                       <select className="form-input" value={formData.groupSize} onChange={set("groupSize")} style={{ appearance: "none", cursor: "pointer" }}>
-                        <option value="">Select...</option>
-                        <option value="individual">Just me</option>
-                        <option value="2-4">2–4 people</option>
-                        <option value="5-10">5–10 people</option>
+                        <option value="">—</option>
+                        <option value="individual">1</option>
+                        <option value="2-4">2–4</option>
+                        <option value="5-10">5–10</option>
                         <option value="10+">10+</option>
                       </select>
                     </div>
                     <div>
-                      <label style={labelStyle}>Experience Level</label>
-                      <select className="form-input" value={formData.experience} onChange={set("experience")} style={{ appearance: "none", cursor: "pointer" }}>
-                        <option value="">Select...</option>
-                        <option value="beginner">Complete beginner</option>
-                        <option value="some">Some experience</option>
-                        <option value="professional">Professional</option>
-                      </select>
+                      <label style={labelStyle}>{t.contact.labels.date}</label>
+                      <input className="form-input" type="date" value={formData.appointmentDate} onChange={set("appointmentDate")} />
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Message — always visible, label changes per service */}
+              {/* Message */}
               <div style={{ marginBottom: 32 }}>
-                <label style={labelStyle}>
-                  {formData.service === "bridal" ? "Anything else we should know?" :
-                   formData.service === "private" ? "Tell us about the look you have in mind" :
-                   formData.service === "editorial" ? "Brief / creative direction" :
-                   formData.service === "workshop" ? "What would you like to learn?" :
-                   "Message"}
-                </label>
+                <label style={labelStyle}>{t.contact.labels.message}</label>
                 <textarea
                   className="form-input"
                   rows={3}
-                  placeholder={
-                    formData.service === "bridal" ? "Hair preferences, inspiration, allergies..." :
-                    formData.service === "private" ? "Describe the occasion and your vision..." :
-                    formData.service === "editorial" ? "Share your mood board, references, or creative brief..." :
-                    formData.service === "workshop" ? "Specific techniques, products, or skills you'd like to focus on..." :
-                    "Tell us about your moment..."
-                  }
+                  placeholder={t.contact.labels.message}
                   value={formData.message}
                   onChange={set("message")}
                   style={{ resize: "vertical", minHeight: 80 }}
@@ -2432,7 +3146,7 @@ const Contact = () => {
                 onMouseEnter={(e) => { e.target.style.background = C.editorialInk[700]; }}
                 onMouseLeave={(e) => { e.target.style.background = C.editorialInk[800]; }}
               >
-                Send Enquiry
+                {t.contact.labels.send}
               </button>
             </form>
           )}
@@ -2446,15 +3160,16 @@ const Contact = () => {
 // FOOTER — Whispered. Information available, never shouted.
 // ═══════════════════════════════════════════════════════════════════
 const Footer = () => {
+  const { t } = useT();
   // Pink footer palette — card stock background with deep-rose ink, to
   // mirror the preloader + business card and give the site a soft,
   // girly close.
   const BG = "#FCD6E3";                     // card stock
-  const LOGO_INK = C.petalPink[800];        // #8C3147
-  const HEADING = HAND_PINK;                // #C84969 — same pink as section eyebrows
-  const BODY = C.petalPink[900];            // #752B3E — dark rose, reads on pink bg
-  const MUTED = C.petalPink[700];           // #A83852
-  const HOVER = C.petalPink[950];           // #451520
+  const LOGO_INK = HAND_RED;                // signature red
+  const HEADING = HAND_RED;                // signature red — same as section eyebrows
+  const BODY = C.text.primary;              // black — body copy + links
+  const MUTED = C.text.secondary;           // near-black — secondary lines
+  const HOVER = C.text.primary;             // black on hover (paired with underline)
   const DIVIDER = "rgba(168, 56, 82, 0.2)"; // petalPink[700] @ 20%
 
   return (
@@ -2481,10 +3196,11 @@ const Footer = () => {
             lineHeight: 1.7,
             color: BODY,
             maxWidth: "36ch",
+            marginBottom: 24,
           }}>
-            Bespoke bridal and beauty artistry, by appointment,
-            across Austria and Belgium.
+            {t.footer.tagline}
           </p>
+          <LanguageSwitcher tone="footer" />
         </div>
 
         {/* Services */}
@@ -2496,8 +3212,8 @@ const Footer = () => {
             lineHeight: 1,
             color: HEADING,
             marginBottom: 20,
-          }}>Services</h4>
-          {["Bridal & Wedding", "Private Appointments", "Workshops & Courses", "Editorial & Campaign"].map((s) => (
+          }}>{t.footer.services}</h4>
+          {t.footer.links.servicesList.map((s) => (
             <p key={s} style={{
               fontFamily: FONT.body,
               fontSize: 14,
@@ -2524,8 +3240,8 @@ const Footer = () => {
             lineHeight: 1,
             color: HEADING,
             marginBottom: 20,
-          }}>Company</h4>
-          {["About Us", "Portfolio", "Testimonials", "Contact"].map((s) => (
+          }}>{t.footer.company}</h4>
+          {t.footer.links.companyList.map((s) => (
             <p key={s} style={{
               fontFamily: FONT.body,
               fontSize: 14,
@@ -2552,7 +3268,7 @@ const Footer = () => {
             lineHeight: 1,
             color: HEADING,
             marginBottom: 20,
-          }}>Contact</h4>
+          }}>{t.footer.contact}</h4>
           <p style={{
             fontFamily: FONT.body,
             fontSize: 14,
@@ -2571,8 +3287,7 @@ const Footer = () => {
             lineHeight: 1.7,
             marginBottom: 20,
           }}>
-            Austria & Belgium<br />
-            By appointment only
+            {t.contact.availability}
           </p>
           <div style={{ display: "flex", gap: 16 }}>
             {/* Instagram */}
@@ -2609,7 +3324,7 @@ const Footer = () => {
           fontWeight: 400,
           color: MUTED,
         }}>
-          &copy; {new Date().getFullYear()} Darlings Studio. All rights reserved.
+          &copy; {new Date().getFullYear()} Darlings Studio. {t.footer.rights}
         </span>
         <div style={{ display: "flex", gap: 24 }}>
           <span style={{
@@ -2618,14 +3333,14 @@ const Footer = () => {
             fontWeight: 400,
             color: MUTED,
             cursor: "pointer",
-          }}>Privacy Policy</span>
+          }}>{t.footer.privacy}</span>
           <span style={{
             fontFamily: FONT.body,
             fontSize: 12,
             fontWeight: 400,
             color: MUTED,
             cursor: "pointer",
-          }}>Terms</span>
+          }}>{t.footer.terms}</span>
         </div>
       </div>
     </footer>
@@ -2706,11 +3421,9 @@ export default function App() {
   }, []);
 
   return (
-    <>
+    <LangProvider>
       <GlobalStyles />
       {!preloaderDone && <Preloader onComplete={handlePreloaderComplete} />}
-      <CustomCursor />
-
       <FilmGrain />
       <Navigation activeSection={activeSection} />
       <main>
@@ -2719,12 +3432,16 @@ export default function App() {
         <Services />
         <Moment />
         <Testimonial />
-        <Portfolio />
+
+        <VariantLabel n={2} name="Cinematic Carousel" />
+        <PortfolioCarousel />
+        <VariantLabel n={3} name="Uniform Gallery" />
+        <PortfolioGallery />
         <About />
         <CallToAction />
         <Contact />
       </main>
       <Footer />
-    </>
+    </LangProvider>
   );
 }
