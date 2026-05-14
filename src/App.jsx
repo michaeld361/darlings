@@ -84,7 +84,7 @@ const IMG = {
   artist1: "/photos/Alix.jpg",
   artist2: "/photos/Marine.jpg",
   // Moment — "not to transform" close-up (replaces brow-detail)
-  detail: "/photos/brow-detail.jpg",
+  detail: "/photos/quote.jpg",
   // Portfolio — curated selection from new client gallery
   port1: "/photos/gallery-01.jpg",
   port2: "/photos/gallery-05.jpg",
@@ -96,11 +96,12 @@ const IMG = {
   port8: "/photos/gallery-33.jpg",
   morning: "/photos/gallery-03.jpg",
   studio: "/photos/gallery-17.jpg",
-  philosophy: "/photos/gallery-35.jpg",
+  philosophy: "/photos/philosophy-new.jpg",
+  thedarlings: "/photos/thedarlings.jpg",
 };
 
 // ─── GALLERY — all new client images ──────────────────────────────
-const GALLERY_IMAGES = Array.from({ length: 38 }, (_, i) => ({
+const GALLERY_IMAGES = Array.from({ length: 36 }, (_, i) => ({
   src: `/photos/gallery-${String(i + 1).padStart(2, "0")}.jpg`,
 }));
 
@@ -144,6 +145,7 @@ const COPY = {
       ],
     },
     moment: { quote: "Not to transform, but to reveal." },
+    meet: { eyebrow: "Meet", heading: "The Darlings" },
     portfolio: {
       eyebrow: "Portfolio",
       heading: "Recent Work",
@@ -216,7 +218,7 @@ const COPY = {
     lang: { en: "English", fr: "Français" },
   },
   fr: {
-    nav: { experience: "L\u2019Expérience", portfolio: "Portfolio", about: "À propos", contact: "Contact" },
+    nav: { experience: "The Experience", portfolio: "Portfolio", about: "About", contact: "Contact" },
     a11y: { menu: "Menu", close: "Fermer", language: "Langue" },
     hero: {
       eyebrow: "Maquillage de mariée & éditorial",
@@ -228,7 +230,7 @@ const COPY = {
       scroll: "Défiler",
     },
     philosophy: {
-      eyebrow: "Philosophie",
+      eyebrow: "Philosophy",
       heading: "Un sanctuaire de calme\navant que le monde ne s\u2019agite.",
       body: "Derrière Darlings se trouvent Alix et Marine. Notre philosophie est simple : nous croyons au pouvoir d\u2019un moment de calme avant que le monde ne s\u2019emballe. Nous mettons à votre service plus de dix ans d\u2019expertise cumulée pour votre journée ou événement spécial. Qu\u2019il s\u2019agisse d\u2019une matinée de mariage, d\u2019un cours de maquillage ou d\u2019une soirée, notre mission est de faire en sorte que vous vous sentiez pleinement choyée et totalement vous-même.",
     },
@@ -250,19 +252,20 @@ const COPY = {
         },
       ],
     },
-    moment: { quote: "Non pas transformer, mais révéler." },
+    moment: { quote: "Not to transform, but to reveal." },
+    meet: { eyebrow: "Meet", heading: "The Darlings" },
     portfolio: {
       eyebrow: "Portfolio",
-      heading: "Travaux récents",
+      heading: "Recent Work",
       pill: "Mis à jour chaque semaine",
       interlude: "Nous croyons en la discrétion. Notre travail vit dans la confiance des femmes qui le portent\u2009—\u2009pas dans des comparaisons avant/après.",
     },
     testimonials: {
-      eyebrow: "Témoignages",
-      heading: "Dans leurs mots.",
+      eyebrow: "Testimonials",
+      heading: "In their words.",
     },
     about: {
-      eyebrow: "À propos",
+      eyebrow: "About",
       heading: "Alix & Marine",
       intro: "Alix et Marine sont des maquilleuses professionnelles certifiées avec plus de dix ans d\u2019expérience. Toutes deux diplômées de la Make Up For Ever Academy, elles perfectionnent continuellement leur savoir-faire et restent à la pointe des dernières techniques et des produits les plus innovants.",
       alix: {
@@ -279,14 +282,14 @@ const COPY = {
       },
     },
     cta: {
-      eyebrow: "Commencer",
-      heading: "Un rendez-vous, une expérience.",
+      eyebrow: "Begin",
+      heading: "An appointment, an experience.",
       body: "Nous travaillons exclusivement sur rendez-vous — partagez quelques détails et nous vous répondrons personnellement sous 24 heures.",
       button: "Nous contacter",
     },
     contact: {
       eyebrow: "Contact",
-      heading: "Nous contacter",
+      heading: "Get in touch",
       body: "Parlez-nous un peu de votre journée. Nous vous répondrons personnellement sous 24 heures.",
       labels: {
         name: "Nom",
@@ -702,6 +705,18 @@ const GlobalStyles = () => {
       .port-uniform-tile:hover img { transform: scale(1.025); }
       @media (max-width: 720px) {
         .port-gallery-grid { grid-template-columns: repeat(2, 1fr) !important; }
+      }
+
+      /* Hero logo offset — desktop shifts right, mobile centres */
+      .hero-logo { transform: translateX(10vw); }
+      @media (max-width: 768px) {
+        .hero-logo { transform: translateY(-15vh); }
+      }
+
+      /* Hero image — mobile needs different crop */
+      .hero-img { object-position: center 50%; }
+      @media (max-width: 768px) {
+        .hero-img { object-position: center 30% !important; }
       }
 
       /* Hero fade-in */
@@ -1569,6 +1584,7 @@ const Hero = () => {
     }}>
       {/* Full-bleed hero photograph — exhale entrance */}
       <img
+        className="hero-img"
         src={IMG.hero}
         alt="Darlings makeup artistry"
         onLoad={() => setImgReady(true)}
@@ -1578,11 +1594,10 @@ const Hero = () => {
           width: "100%",
           height: "100%",
           objectFit: "cover",
-          objectPosition: "center 30%",
+          objectPosition: "center 50%",
           opacity: imgReady ? 1 : 0,
           transform: imgReady ? "scale(1)" : "scale(1.05)",
           transition: `opacity 1800ms ${EASE.enter}, transform 2400ms ${EASE.exit}`,
-          filter: "brightness(0.82) contrast(1.02) saturate(0.95)",
         }}
       />
 
@@ -1613,13 +1628,11 @@ const Hero = () => {
       {/* Morning dust motes — subtle warmth */}
       <MorningMotes />
 
-      {/* Logo — centred over the image, appears first */}
-      <div style={{
+      <div className="hero-logo" style={{
         position: "relative",
         zIndex: 3,
         opacity: loaded ? 1 : 0,
-        transform: loaded ? "none" : "translateY(8px)",
-        transition: `all 1200ms ${EASE.enter} 400ms`,
+        transition: `opacity 1200ms ${EASE.enter} 400ms`,
         marginBottom: 40,
       }}>
         <DarlingsLogo width={340} color={HAND_RED} />
@@ -1734,7 +1747,7 @@ const Philosophy = () => {
           borderRadius: 9999,
           display: "inline-block",
         }}>
-          Est. 2019
+          Est. 2018
         </span>
       </div>
 
@@ -1851,14 +1864,14 @@ const Moment = () => {
     <div style={{
       position: "absolute",
       bottom: 64,
-      left: 0,
-      right: 0,
-      textAlign: "center",
+      right: 48,
+      left: "50%",
+      textAlign: "right",
       zIndex: 2,
     }}>
       <p style={{
         fontFamily: FONT.heading,
-        fontSize: "clamp(28px, 4vw, 42px)",
+        fontSize: "clamp(36px, 5.5vw, 64px)",
         fontWeight: 400,
         fontStyle: "italic",
         lineHeight: 1.2,
@@ -2104,17 +2117,6 @@ const Portfolio = () => {
             }}>
               {t.portfolio.eyebrow}
             </span>
-            <h2 style={{
-              fontFamily: FONT.heading,
-              fontFeatureSettings: FONT.headingFeatures,
-              fontSize: "clamp(32px, 4.5vw, 49px)",
-              fontWeight: 400,
-              lineHeight: 1.1,
-              letterSpacing: "-0.02em",
-              color: C.text.primary,
-            }}>
-              {t.portfolio.heading}
-            </h2>
           </div>
           <span style={{
             fontFamily: FONT.body,
@@ -2308,17 +2310,6 @@ const PortfolioCarousel = () => {
               }}>
                 {t.portfolio.eyebrow}
               </span>
-              <h2 style={{
-                fontFamily: FONT.heading,
-                fontFeatureSettings: FONT.headingFeatures,
-                fontSize: "clamp(32px, 4.5vw, 49px)",
-                fontWeight: 400,
-                lineHeight: 1.1,
-                letterSpacing: "-0.02em",
-                color: C.text.primary,
-              }}>
-                {t.portfolio.heading}
-              </h2>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <span style={{
@@ -2439,190 +2430,6 @@ const PortfolioCarousel = () => {
 };
 
 // ═══════════════════════════════════════════════════════════════════
-// PORTFOLIO — Variant 03: Uniform Gallery
-// Calm 3-column grid. All images share aspect ratio. No parallax.
-// ═══════════════════════════════════════════════════════════════════
-const PortfolioGallery = () => {
-  const { t } = useT();
-  const [lightbox, setLightbox] = useState(null);
-  const [visibleCount, setVisibleCount] = useState(12);
-
-  const images = GALLERY_IMAGES;
-  const visible = images.slice(0, visibleCount);
-  const hasMore = visibleCount < images.length;
-
-  return (
-    <section style={{
-      padding: "80px 48px 160px",
-      maxWidth: 1280,
-      margin: "0 auto",
-    }}>
-      <Section>
-        <div style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-end",
-          marginBottom: 64,
-        }}>
-          <div>
-            <span className="script-heading" style={{
-              fontFamily: FONT.hand,
-              fontSize: "clamp(58px, 11.7vw, 135px)",
-              fontWeight: 400,
-              lineHeight: 1,
-              color: HAND_RED,
-              display: "block",
-              marginBottom: 16,
-            }}>
-              {t.portfolio.eyebrow}
-            </span>
-            <h2 style={{
-              fontFamily: FONT.heading,
-              fontFeatureSettings: FONT.headingFeatures,
-              fontSize: "clamp(32px, 4.5vw, 49px)",
-              fontWeight: 400,
-              lineHeight: 1.1,
-              letterSpacing: "-0.02em",
-              color: C.text.primary,
-            }}>
-              {t.portfolio.heading}
-            </h2>
-          </div>
-          <span style={{
-            fontFamily: FONT.body,
-            fontSize: 12,
-            fontWeight: 400,
-            letterSpacing: "0.05em",
-            textTransform: "uppercase",
-            color: C.text.tertiary,
-            padding: "8px 20px",
-            border: `1px solid ${C.border.default}`,
-            borderRadius: 9999,
-          }}>
-            {t.portfolio.pill}
-          </span>
-        </div>
-      </Section>
-
-      <div className="port-gallery-grid" style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(3, 1fr)",
-        gap: 20,
-        rowGap: 20,
-      }}>
-        {visible.map((img, i) => (
-          <Section key={`${img.src}-${i}`} delay={i < 12 ? i * 60 : (i - visibleCount + 12) * 60}>
-            <figure
-              data-cursor="gallery"
-              className="port-uniform-tile"
-              onClick={() => setLightbox(img.src)}
-              style={{
-                position: "relative",
-                overflow: "hidden",
-                cursor: "pointer",
-                margin: 0,
-              }}
-            >
-              <div style={{ aspectRatio: "4/5", overflow: "hidden" }}>
-                <LazyImage src={img.src} alt="Darlings portfolio work" />
-              </div>
-            </figure>
-          </Section>
-        ))}
-      </div>
-
-      {hasMore && (
-        <div style={{ textAlign: "center", marginTop: 64 }}>
-          <button
-            onClick={() => setVisibleCount((c) => Math.min(c + 12, images.length))}
-            style={{
-              fontFamily: FONT.body,
-              fontSize: 13,
-              fontWeight: 400,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              color: C.text.secondary,
-              background: "transparent",
-              border: `1px solid ${C.border.default}`,
-              borderRadius: 9999,
-              padding: "14px 40px",
-              cursor: "pointer",
-              transition: `all ${DUR.normal}ms ${EASE.default}`,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = C.brand.default;
-              e.currentTarget.style.color = C.brand.default;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = C.border.default;
-              e.currentTarget.style.color = C.text.secondary;
-            }}
-          >
-            View more · {images.length - visibleCount} remaining
-          </button>
-        </div>
-      )}
-
-      {lightbox && (
-        <div
-          onClick={() => setLightbox(null)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 200,
-            background: `${C.editorialInk[900]}f0`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            padding: 48,
-            animation: `fadeIn ${DUR.normal}ms ${EASE.enter}`,
-          }}
-        >
-          <img src={lightbox} alt="Portfolio detail" style={{ maxWidth: "85vw", maxHeight: "85vh", objectFit: "contain" }} />
-        </div>
-      )}
-    </section>
-  );
-};
-
-// ═══════════════════════════════════════════════════════════════════
-// VariantLabel — discreet client-review marker shown above each
-// stacked Portfolio variant. Hidden in production via prop.
-// ═══════════════════════════════════════════════════════════════════
-const VariantLabel = ({ n, total = 3, name }) => (
-  <div style={{
-    maxWidth: 1280,
-    margin: "0 auto",
-    padding: "32px 48px 0",
-  }}>
-    <div style={{
-      display: "inline-flex",
-      alignItems: "center",
-      gap: 12,
-      padding: "8px 16px",
-      border: `1px dashed ${C.border.subtle}`,
-      borderRadius: 4,
-      fontFamily: FONT.body,
-      fontSize: 11,
-      letterSpacing: "0.16em",
-      textTransform: "uppercase",
-      color: C.text.tertiary,
-    }}>
-      <span style={{ fontVariantNumeric: "tabular-nums" }}>
-        Option {String(n).padStart(2, "0")} / {String(total).padStart(2, "0")}
-      </span>
-      <span style={{
-        width: 1,
-        height: 12,
-        background: C.border.default,
-      }} />
-      <span>{name}</span>
-    </div>
-  </div>
-);
-
-// ═══════════════════════════════════════════════════════════════════
 // ABOUT — Asymmetric duo layout. Not a grid of equal cards.
 // ═══════════════════════════════════════════════════════════════════
 const About = () => {
@@ -2633,8 +2440,50 @@ const About = () => {
     maxWidth: 1280,
     margin: "0 auto",
   }}>
-    {/* Intro — applies to both artists */}
-    <Section style={{ maxWidth: 640, marginBottom: 140, marginLeft: "auto", marginRight: "auto", textAlign: "center" }}>
+    {/* Meet the Darlings — duo photo + intro */}
+    <Section style={{
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      textAlign: "center",
+      marginBottom: 140,
+    }}>
+      <span className="script-heading" style={{
+        fontFamily: FONT.hand,
+        fontSize: "clamp(58px, 11.7vw, 135px)",
+        fontWeight: 400,
+        lineHeight: 1,
+        color: HAND_RED,
+        display: "block",
+        marginBottom: 8,
+      }}>
+        {t.meet.eyebrow}
+      </span>
+      <h2 style={{
+        fontFamily: FONT.heading,
+        fontFeatureSettings: FONT.headingFeatures,
+        fontSize: "clamp(32px, 4.5vw, 49px)",
+        fontWeight: 400,
+        lineHeight: 1.1,
+        letterSpacing: "-0.02em",
+        color: C.text.primary,
+        marginBottom: 48,
+      }}>
+        {t.meet.heading}
+      </h2>
+      <div style={{
+        maxWidth: 520,
+        width: "100%",
+        overflow: "hidden",
+        position: "relative",
+        marginBottom: 48,
+      }}>
+        <PeelImage
+          src={IMG.thedarlings}
+          alt="Alix and Marine — the Darlings"
+          aspect="3/4"
+        />
+      </div>
       <p style={{
         fontFamily: FONT.heading,
         fontSize: 20,
@@ -2643,6 +2492,7 @@ const About = () => {
         lineHeight: 1.65,
         letterSpacing: "-0.005em",
         color: C.text.secondary,
+        maxWidth: 640,
       }}>
         {t.about.intro}
       </p>
@@ -2923,7 +2773,7 @@ const Contact = () => {
               color: C.text.tertiary,
               display: "block",
               marginBottom: 16,
-            }}>Alix · Austria</span>
+            }}>Alix · Austria & Belgium</span>
             <a href="mailto:moncheuralix@gmail.com" style={{
               fontFamily: FONT.body,
               fontSize: 16,
@@ -3182,7 +3032,7 @@ const Footer = () => {
         maxWidth: 1280,
         margin: "0 auto",
         display: "grid",
-        gridTemplateColumns: "5fr 2fr 2fr 3fr",
+        gridTemplateColumns: "1fr 1fr",
         gap: 64,
         marginBottom: 96,
       }}>
@@ -3203,64 +3053,8 @@ const Footer = () => {
           <LanguageSwitcher tone="footer" />
         </div>
 
-        {/* Services */}
-        <div>
-          <h4 style={{
-            fontFamily: FONT.hand,
-            fontSize: 36,
-            fontWeight: 400,
-            lineHeight: 1,
-            color: HEADING,
-            marginBottom: 20,
-          }}>{t.footer.services}</h4>
-          {t.footer.links.servicesList.map((s) => (
-            <p key={s} style={{
-              fontFamily: FONT.body,
-              fontSize: 14,
-              fontWeight: 400,
-              color: MUTED,
-              marginBottom: 10,
-              cursor: "pointer",
-              transition: `color ${DUR.normal}ms`,
-            }}
-              onMouseEnter={(e) => { e.target.style.color = HOVER; }}
-              onMouseLeave={(e) => { e.target.style.color = MUTED; }}
-            >
-              {s}
-            </p>
-          ))}
-        </div>
-
-        {/* Company */}
-        <div>
-          <h4 style={{
-            fontFamily: FONT.hand,
-            fontSize: 36,
-            fontWeight: 400,
-            lineHeight: 1,
-            color: HEADING,
-            marginBottom: 20,
-          }}>{t.footer.company}</h4>
-          {t.footer.links.companyList.map((s) => (
-            <p key={s} style={{
-              fontFamily: FONT.body,
-              fontSize: 14,
-              fontWeight: 400,
-              color: MUTED,
-              marginBottom: 10,
-              cursor: "pointer",
-              transition: `color ${DUR.normal}ms`,
-            }}
-              onMouseEnter={(e) => { e.target.style.color = HOVER; }}
-              onMouseLeave={(e) => { e.target.style.color = MUTED; }}
-            >
-              {s}
-            </p>
-          ))}
-        </div>
-
         {/* Contact */}
-        <div>
+        <div style={{ textAlign: "right" }}>
           <h4 style={{
             fontFamily: FONT.hand,
             fontSize: 36,
@@ -3289,8 +3083,7 @@ const Footer = () => {
           }}>
             {t.contact.availability}
           </p>
-          <div style={{ display: "flex", gap: 16 }}>
-            {/* Instagram */}
+          <div style={{ display: "flex", gap: 16, justifyContent: "flex-end" }}>
             <a href="https://instagram.com/darlingsmakeupbe" target="_blank" rel="noopener noreferrer"
               style={{ color: MUTED, transition: `color ${DUR.normal}ms` }}
               onMouseEnter={(e) => { e.currentTarget.style.color = HOVER; }}
@@ -3299,7 +3092,7 @@ const Footer = () => {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
                 <circle cx="12" cy="12" r="5"/>
-                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+                <line x1="17.5" y1="6.5" x2="17.01" y2="6.5"/>
               </svg>
             </a>
           </div>
@@ -3313,10 +3106,8 @@ const Footer = () => {
         maxWidth: 1280,
         margin: "0 auto",
         display: "flex",
-        justifyContent: "space-between",
+        justifyContent: "center",
         alignItems: "center",
-        flexWrap: "wrap",
-        gap: 16,
       }}>
         <span style={{
           fontFamily: FONT.body,
@@ -3326,22 +3117,6 @@ const Footer = () => {
         }}>
           &copy; {new Date().getFullYear()} Darlings Studio. {t.footer.rights}
         </span>
-        <div style={{ display: "flex", gap: 24 }}>
-          <span style={{
-            fontFamily: FONT.body,
-            fontSize: 12,
-            fontWeight: 400,
-            color: MUTED,
-            cursor: "pointer",
-          }}>{t.footer.privacy}</span>
-          <span style={{
-            fontFamily: FONT.body,
-            fontSize: 12,
-            fontWeight: 400,
-            color: MUTED,
-            cursor: "pointer",
-          }}>{t.footer.terms}</span>
-        </div>
       </div>
     </footer>
   );
@@ -3433,10 +3208,7 @@ export default function App() {
         <Moment />
         <Testimonial />
 
-        <VariantLabel n={2} name="Cinematic Carousel" />
         <PortfolioCarousel />
-        <VariantLabel n={3} name="Uniform Gallery" />
-        <PortfolioGallery />
         <About />
         <CallToAction />
         <Contact />
