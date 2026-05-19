@@ -77,32 +77,32 @@ const DUR = { instant: 100, fast: 200, normal: 350, slow: 500, slower: 700, thre
 // ─── CURATED IMAGERY ──────────────────────────────────────────────
 const IMG = {
   // Hero — new client hero image
-  hero: "/photos/hero.jpg",
+  hero: "/photos/hero.webp",
   // Showcase — bridal portrait
-  showcase: "/photos/gallery-16.jpg",
+  showcase: "/photos/gallery-16.webp",
   // Artist portraits — Alix and Marine
-  artist1: "/photos/Alix.jpg",
-  artist2: "/photos/Marine.jpg",
+  artist1: "/photos/Alix.webp",
+  artist2: "/photos/Marine.webp",
   // Moment — "not to transform" close-up (replaces brow-detail)
-  detail: "/photos/quote.jpg",
+  detail: "/photos/quote.webp",
   // Portfolio — curated selection from new client gallery
-  port1: "/photos/gallery-01.jpg",
-  port2: "/photos/gallery-05.jpg",
-  port3: "/photos/gallery-09.jpg",
-  port4: "/photos/gallery-14.jpg",
-  port5: "/photos/gallery-19.jpg",
-  port6: "/photos/gallery-23.jpg",
-  port7: "/photos/gallery-28.jpg",
-  port8: "/photos/gallery-33.jpg",
-  morning: "/photos/gallery-03.jpg",
-  studio: "/photos/gallery-17.jpg",
-  philosophy: "/photos/philosophy-new.jpg",
-  thedarlings: "/photos/thedarlings.jpg",
+  port1: "/photos/gallery-01.webp",
+  port2: "/photos/gallery-05.webp",
+  port3: "/photos/gallery-09.webp",
+  port4: "/photos/gallery-14.webp",
+  port5: "/photos/gallery-19.webp",
+  port6: "/photos/gallery-23.webp",
+  port7: "/photos/gallery-28.webp",
+  port8: "/photos/gallery-33.webp",
+  morning: "/photos/gallery-03.webp",
+  studio: "/photos/gallery-17.webp",
+  philosophy: "/photos/philosophy-new.webp",
+  thedarlings: "/photos/thedarlings.webp",
 };
 
 // ─── GALLERY — all new client images ──────────────────────────────
 const GALLERY_IMAGES = Array.from({ length: 36 }, (_, i) => ({
-  src: `/photos/gallery-${String(i + 1).padStart(2, "0")}.jpg`,
+  src: `/photos/gallery-${String(i + 1).padStart(2, "0")}.webp`,
 }));
 
 // ─── i18n — bilingual copy dictionary (EN + FR) ──────────────────
