@@ -175,7 +175,7 @@ const COPY = {
     },
     cta: {
       eyebrow: "Begin",
-      heading: "An appointment, an experience.",
+      heading: "Your moment begins here.",
       body: "We work by appointment only — please share a few details and we will respond personally within 24 hours.",
       button: "Get in touch",
     },
@@ -283,7 +283,7 @@ const COPY = {
     },
     cta: {
       eyebrow: "Begin",
-      heading: "An appointment, an experience.",
+      heading: "Votre moment commence ici.",
       body: "Nous travaillons exclusivement sur rendez-vous — partagez quelques détails et nous vous répondrons personnellement sous 24 heures.",
       button: "Nous contacter",
     },
@@ -2698,25 +2698,6 @@ const CallToAction = () => {
       >
         {t.cta.button}
       </button>
-      <button
-        onClick={() => document.getElementById("portfolio")?.scrollIntoView({ behavior: "smooth" })}
-        style={{
-          fontFamily: FONT.heading,
-          fontSize: 16,
-          fontWeight: 500,
-          color: C.text.primary,
-          background: "transparent",
-          border: `1px solid ${C.border.strong}`,
-          borderRadius: 3,
-          padding: "16px 40px",
-          cursor: "pointer",
-          transition: `border-color ${DUR.normal}ms ${EASE.default}`,
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.editorialInk[800]; }}
-        onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border.strong; }}
-      >
-        {t.nav.portfolio}
-      </button>
     </div>
   </Section>
   );
@@ -2751,8 +2732,8 @@ const Contact = () => {
     const serviceLabel = {
       bridal: "Bridal",
       private: "Private Appointment",
-      workshop: "Workshop & Course",
-      other: "Other / General",
+      workshop: "Workshop and Course",
+      other: "General Enquiry",
     }[formData.service] || formData.service;
 
     const details = [
@@ -2852,7 +2833,7 @@ const Contact = () => {
             color: C.text.primary,
             marginBottom: 48,
           }}>
-            {t.cta.heading}
+            We'd love to hear from you.
           </h2>
 
           <div style={{ marginBottom: 32 }}>
