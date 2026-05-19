@@ -707,11 +707,8 @@ const GlobalStyles = () => {
         .port-gallery-grid { grid-template-columns: repeat(2, 1fr) !important; }
       }
 
-      /* Hero logo offset — desktop shifts right, mobile centres */
-      .hero-logo { transform: translateX(10vw); }
-      @media (max-width: 768px) {
-        .hero-logo { transform: translateY(-15vh); }
-      }
+      /* Hero logo — always centred at top */
+      .hero-logo { transform: none; }
 
       /* Hero image — mobile needs different crop */
       .hero-img { object-position: center 50%; }
@@ -1405,6 +1402,26 @@ const Navigation = ({ activeSection }) => {
             {l.label}
           </button>
         ))}
+        <a
+          href="https://instagram.com/darlingsmakeupbe"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Instagram"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            color: pastHero ? C.text.secondary : "rgba(255,255,255,0.8)",
+            transition: `color ${DUR.slow}ms ${EASE.default}`,
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = pastHero ? C.text.primary : "#fff"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = pastHero ? C.text.secondary : "rgba(255,255,255,0.8)"; }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="5" />
+            <circle cx="12" cy="12" r="5" />
+            <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none" />
+          </svg>
+        </a>
         <LanguageSwitcher tone={pastHero ? "dark" : "light"} />
       </div>
 
@@ -1577,7 +1594,7 @@ const Hero = () => {
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
-      justifyContent: "center",
+      justifyContent: "flex-start",
       position: "relative",
       overflow: "hidden",
       background: C.editorialInk[900],
@@ -1633,9 +1650,9 @@ const Hero = () => {
         zIndex: 3,
         opacity: loaded ? 1 : 0,
         transition: `opacity 1200ms ${EASE.enter} 400ms`,
-        marginBottom: 40,
+        paddingTop: "clamp(90px, 12vh, 140px)",
       }}>
-        <DarlingsLogo width={340} color={HAND_RED} />
+        <DarlingsLogo width={240} color={HAND_RED} style={{ width: "clamp(200px, 22vw, 240px)" }} />
       </div>
 
       {/* Minimal scroll indicator */}
@@ -1879,7 +1896,7 @@ const Moment = () => {
         color: C.text.inverse,
         textShadow: "none",
       }}>
-        {t.moment.quote}
+        Not to transform,<br />but to reveal.
       </p>
     </div>
   </Section>
@@ -2439,44 +2456,24 @@ const About = () => {
     padding: "80px 48px",
     maxWidth: 1280,
     margin: "0 auto",
+    overflow: "visible",
   }}>
     {/* Meet the Darlings — duo photo + intro */}
     <Section style={{
+      position: "relative",
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
       textAlign: "center",
       marginBottom: 140,
+      overflow: "visible",
     }}>
-      <span className="script-heading" style={{
-        fontFamily: FONT.hand,
-        fontSize: "clamp(58px, 11.7vw, 135px)",
-        fontWeight: 400,
-        lineHeight: 1,
-        color: HAND_RED,
-        display: "block",
-        marginBottom: 8,
-      }}>
-        {t.meet.eyebrow}
-      </span>
-      <h2 style={{
-        fontFamily: FONT.heading,
-        fontFeatureSettings: FONT.headingFeatures,
-        fontSize: "clamp(32px, 4.5vw, 49px)",
-        fontWeight: 400,
-        lineHeight: 1.1,
-        letterSpacing: "-0.02em",
-        color: C.text.primary,
-        marginBottom: 48,
-      }}>
-        {t.meet.heading}
-      </h2>
+      {/* Photo — centred, with the script overlaying it */}
       <div style={{
-        maxWidth: 520,
-        width: "100%",
-        overflow: "hidden",
         position: "relative",
-        marginBottom: 48,
+        width: "100%",
+        maxWidth: 520,
+        zIndex: 1,
       }}>
         <PeelImage
           src={IMG.thedarlings}
@@ -2484,6 +2481,33 @@ const About = () => {
           aspect="3/4"
         />
       </div>
+
+      {/* Large Northwell script — overlays the photo */}
+      <h2
+        className="script-heading"
+        aria-label="Meet the Darlings"
+        style={{
+          fontFamily: FONT.hand,
+          fontSize: "clamp(48px, 17vw, 260px)",
+          fontWeight: 400,
+          lineHeight: 0.95,
+          color: HAND_RED,
+          whiteSpace: "nowrap",
+          position: "absolute",
+          top: "10%",
+          left: "50%",
+          transform: "translate(-50%, 0) rotate(-8deg)",
+          zIndex: 2,
+          pointerEvents: "none",
+          margin: 0,
+          padding: 0,
+          width: "max-content",
+        }}
+      >
+        Meet the Darlings
+      </h2>
+
+      {/* Intro copy — below the photo */}
       <p style={{
         fontFamily: FONT.heading,
         fontSize: 20,
@@ -2493,6 +2517,7 @@ const About = () => {
         letterSpacing: "-0.005em",
         color: C.text.secondary,
         maxWidth: 640,
+        marginTop: 48,
       }}>
         {t.about.intro}
       </p>
@@ -2710,13 +2735,81 @@ const Contact = () => {
     message: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState(null);
 
   const set = (key) => (e) => setFormData({ ...formData, [key]: e.target.value });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.name && formData.email && formData.service) {
+    if (!formData.name || !formData.email || !formData.service) return;
+
+    setSending(true);
+    setError(null);
+
+    // Build a readable summary of all form fields
+    const serviceLabel = {
+      bridal: "Bridal",
+      private: "Private Appointment",
+      workshop: "Workshop & Course",
+      other: "Other / General",
+    }[formData.service] || formData.service;
+
+    const details = [
+      `Name: ${formData.name}`,
+      `Email: ${formData.email}`,
+      formData.phone && `Phone: ${formData.phone}`,
+      `Service: ${serviceLabel}`,
+      formData.weddingDate && `Wedding Date: ${formData.weddingDate}`,
+      formData.readyBy && `Ready By: ${formData.readyBy}`,
+      formData.venue && `Venue: ${formData.venue}`,
+      formData.partySize && `Party Size: ${formData.partySize}`,
+      formData.travelRequired && `Travel Required: ${formData.travelRequired}`,
+      formData.appointmentDate && `Appointment Date: ${formData.appointmentDate}`,
+      formData.location && `Location: ${formData.location}`,
+      formData.occasion && `Occasion: ${formData.occasion}`,
+      formData.groupSize && `Group Size: ${formData.groupSize}`,
+      formData.experience && `Experience Level: ${formData.experience}`,
+      formData.message && `\nMessage:\n${formData.message}`,
+    ].filter(Boolean).join("\n");
+
+    // EmailJS template parameters — the template should use these variables
+    const templateParams = {
+      name: formData.name,              // maps to {{name}} in From Name
+      email: formData.email,            // maps to {{email}} in Reply To
+      from_name: formData.name,
+      from_email: formData.email,
+      phone: formData.phone || "—",
+      service: serviceLabel,
+      message: formData.message || "—",
+      details,                // full summary for the email body
+      to_email: "michael.down@omc.com",  // TEST — change back to client emails after testing
+    };
+
+    try {
+      const emailjs = (await import("@emailjs/browser")).default;
+      // ──────────────────────────────────────────────────────────
+      // EmailJS Configuration — set these in your EmailJS dashboard:
+      //   1. Create an account at https://emailjs.com
+      //   2. Add an Email Service (Gmail)
+      //   3. Create an Email Template with variables:
+      //      {{from_name}}, {{from_email}}, {{phone}},
+      //      {{service}}, {{details}}, {{message}}
+      //      Set the TO field to: {{to_email}}
+      //      Set the subject to: Darlings Website Enquiry — {{service}}
+      //   4. Replace the IDs below with your own:
+      // ──────────────────────────────────────────────────────────
+      const SERVICE_ID  = "service_bx7mcba";   // your EmailJS service ID
+      const TEMPLATE_ID = "template_xrq5x4d";  // your EmailJS template ID
+      const PUBLIC_KEY  = "gc3boRhBV-2PWMLwG";     // your EmailJS public key
+
+      await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY);
       setSubmitted(true);
+    } catch (err) {
+      console.error("EmailJS error:", err);
+      setError(true);
+    } finally {
+      setSending(false);
     }
   };
 
@@ -2984,19 +3077,29 @@ const Contact = () => {
               </div>
 
               {/* Submit */}
+              {error && (
+                <p style={{
+                  fontFamily: FONT.body, fontSize: 14, color: "#c0392b",
+                  marginBottom: 16, textAlign: "center",
+                }}>
+                  Something went wrong — please try again or email us directly.
+                </p>
+              )}
               <button
                 type="submit"
+                disabled={sending}
                 style={{
                   fontFamily: FONT.heading, fontSize: 16, fontWeight: 500,
-                  color: C.text.inverse, background: C.editorialInk[800],
+                  color: C.text.inverse, background: sending ? C.editorialInk[600] : C.editorialInk[800],
                   border: "none", borderRadius: 3, padding: "16px 48px",
-                  cursor: "pointer", width: "100%",
+                  cursor: sending ? "wait" : "pointer", width: "100%",
+                  opacity: sending ? 0.7 : 1,
                   transition: `all ${DUR.normal}ms ${EASE.default}`,
                 }}
-                onMouseEnter={(e) => { e.target.style.background = C.editorialInk[700]; }}
-                onMouseLeave={(e) => { e.target.style.background = C.editorialInk[800]; }}
+                onMouseEnter={(e) => { if (!sending) e.target.style.background = C.editorialInk[700]; }}
+                onMouseLeave={(e) => { if (!sending) e.target.style.background = C.editorialInk[800]; }}
               >
-                {t.contact.labels.send}
+                {sending ? "Sending…" : t.contact.labels.send}
               </button>
             </form>
           )}
