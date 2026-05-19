@@ -2770,7 +2770,6 @@ const Contact = () => {
       formData.occasion && `Occasion: ${formData.occasion}`,
       formData.groupSize && `Group Size: ${formData.groupSize}`,
       formData.experience && `Experience Level: ${formData.experience}`,
-      formData.message && `\nMessage:\n${formData.message}`,
     ].filter(Boolean).join("\n");
 
     // EmailJS template parameters — the template should use these variables
