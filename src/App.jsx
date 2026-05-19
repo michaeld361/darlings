@@ -2782,7 +2782,7 @@ const Contact = () => {
       service: serviceLabel,
       message: formData.message || "—",
       details,                // full summary for the email body
-      to_email: "michael.down@omc.com",  // TEST — change back to client emails after testing
+      to_email: "moncheuralix@gmail.com,marinedementen@gmail.com",
     };
 
     try {
