@@ -176,7 +176,7 @@ const COPY = {
     cta: {
       eyebrow: "Begin",
       heading: "Your moment begins here.",
-      body: "We work by appointment only — please share a few details and we will respond personally within 24 hours.",
+      body: "We work by appointment only — please share a few details and we will come back to you as soon as possible.",
       button: "Get in touch",
     },
     contact: {
@@ -193,7 +193,7 @@ const COPY = {
         guests: "Number of guests",
         location: "Location",
         type: "Interest",
-        message: "Tell us about your day",
+        message: "Tell us more about your special event",
         send: "Send enquiry",
         sending: "Sending…",
         sent: "Thank you — we will be in touch shortly.",
@@ -271,8 +271,8 @@ const COPY = {
       alix: {
         name: "Alix",
         role: "Co-fondatrice & Maquilleuse",
-        body: "Alix aborde le maquillage avec une compréhension fine et intuitive de la lumière et de la peau. Avec une gestuelle douce et maîtrisée, elle sublime la beauté naturelle en créant des looks lumineux, fidèles à chaque personnalité. Son approche, guidée par une élégance discrète, offre une expérience attentive où la beauté se révèle à la fois subtilement magnifiée et profondément personnelle.",
-        quote: "Je crois que l\u2019art le plus fin est celui que l\u2019on ne voit pas, mais que l\u2019on ressent. Chaque visage raconte une histoire, et mon rôle est simplement de la révéler.",
+        body: "Grâce à des gestes précis et délicats, Alix révèle la beauté de ses clientes à travers des looks lumineux, élégants, profondément fidèles à leur personnalité. Son approche, à la fois subtile et raffinée, transforme chaque mise en beauté en un moment d’écoute et de confiance, où l’on se sent naturellement mis en valeur.",
+        quote: "Je crois que le maquillage le plus réussi est celui que l’on remarque à peine, mais qui se ressent pleinement. Chaque visage porte une histoire unique, et mon rôle est simplement de la révéler.",
       },
       marine: {
         name: "Marine",
@@ -284,7 +284,7 @@ const COPY = {
     cta: {
       eyebrow: "Begin",
       heading: "Votre moment commence ici.",
-      body: "Nous travaillons exclusivement sur rendez-vous — partagez quelques détails et nous vous répondrons personnellement sous 24 heures.",
+      body: "Nous travaillons exclusivement sur rendez-vous — partagez nous quelques détails et nous vous répondrons au plus vite.",
       button: "Nous contacter",
     },
     contact: {
@@ -301,7 +301,7 @@ const COPY = {
         guests: "Nombre d\u2019invitées",
         location: "Lieu",
         type: "Intérêt",
-        message: "Parlez-nous de votre journée",
+        message: "Dites-nous en plus à propos de cet événement spécial",
         send: "Envoyer",
         sending: "Envoi en cours…",
         sent: "Merci — nous reviendrons vers vous très vite.",
@@ -1403,7 +1403,7 @@ const Navigation = ({ activeSection }) => {
           </button>
         ))}
         <a
-          href="https://instagram.com/darlingsmakeupbe"
+          href="https://www.instagram.com/darlingsmakeupbe/"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Instagram"
@@ -2908,7 +2908,7 @@ const Contact = () => {
               marginBottom: 8,
             }}>{t.footer.follow}</span>
             <div style={{ display: "flex", gap: 20 }}>
-              <a href="https://instagram.com/darlingsmakeupbe" target="_blank" rel="noopener noreferrer" style={{
+              <a href="https://www.instagram.com/darlingsmakeupbe/" target="_blank" rel="noopener noreferrer" style={{
                 fontFamily: FONT.body,
                 fontSize: 14,
                 fontWeight: 400,
@@ -3167,7 +3167,7 @@ const Footer = () => {
             {t.contact.availability}
           </p>
           <div style={{ display: "flex", gap: 16, justifyContent: "flex-end" }}>
-            <a href="https://instagram.com/darlingsmakeupbe" target="_blank" rel="noopener noreferrer"
+            <a href="https://www.instagram.com/darlingsmakeupbe/" target="_blank" rel="noopener noreferrer"
               style={{ color: MUTED, transition: `color ${DUR.normal}ms` }}
               onMouseEnter={(e) => { e.currentTarget.style.color = HOVER; }}
               onMouseLeave={(e) => { e.currentTarget.style.color = MUTED; }}
@@ -3198,7 +3198,7 @@ const Footer = () => {
           fontWeight: 400,
           color: MUTED,
         }}>
-          &copy; {new Date().getFullYear()} Darlings Studio. {t.footer.rights}
+          &copy; {new Date().getFullYear()} Darlings Makeup. {t.footer.rights}
         </span>
       </div>
     </footer>
